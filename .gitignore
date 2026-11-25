@@ -1,0 +1,20 @@
+.venv/
+data/
+__pycache__/
+*.egg-info/
+.pytest_cache/
+
+# built installers and build output
+dist/
+build/
+packaging/build/
+
+# Android app build output
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/app/google-services.json
+android/.idea/
+*.apk
+*.aab

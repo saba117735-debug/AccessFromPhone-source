@@ -1,0 +1,228 @@
+AccessFromPhone - Installation and Setup Guide (Windows)
+==========================================================
+
+This folder contains only the source code. Dependencies (the Python packages)
+are NOT included; they are downloaded automatically during setup.
+
+
+----------------------------------------------------------------------
+1. REQUIREMENTS
+----------------------------------------------------------------------
+
+Required:
+  - Windows 10 or 11
+  - Python 3.11 or newer          https://www.python.org/downloads/
+      During install, tick "Add python.exe to PATH".
+  - Internet connection for the first setup (to download packages)
+  - A phone (Android or iPhone) on the SAME Wi-Fi as the PC
+
+Optional (only if you need these features):
+  - Ollama               private AI that runs on this PC     https://ollama.com
+  - Anthropic API key    hosted AI (Claude), more capable
+  - Tailscale            use the phone away from home         https://tailscale.com
+  - Android Studio       build the Android app (APK)          https://developer.android.com/studio
+  - Inno Setup 6         build the Windows installer          winget install JRSoftware.InnoSetup
+
+Check Python is installed (open PowerShell or Command Prompt):
+    python --version
+It must show 3.11 or higher.
+
+
+----------------------------------------------------------------------
+2. INSTALL AND START (easiest way)
+----------------------------------------------------------------------
+
+  1. Unzip the folder anywhere, for example  C:\AccessFromPhone
+  2. Double-click  START.bat
+       - First run: creates a ".venv" folder and installs all packages
+         listed in pyproject.toml (about 1-2 minutes).
+       - Later runs: starts immediately.
+  3. A page opens in the browser on this PC:  http://127.0.0.1:8766
+  4. Sign in with your WINDOWS user name and Windows account password
+     (not a PIN or fingerprint). The first sign-in becomes the owner.
+  5. The page shows a QR code and a short pairing code (like K7M2-9QXP).
+     Scan the QR code with your phone camera, or type the code on the phone.
+     The code works once, for one phone, for 2 minutes.
+  6. Done. Type commands on the phone, for example:
+         list
+         read welcome.txt
+         find *.txt in workspace
+
+To start it again later: double-click START.bat again.
+To stop it: close the window (or press Ctrl+C in it).
+
+
+----------------------------------------------------------------------
+3. INSTALL MANUALLY (for developers)
+----------------------------------------------------------------------
+
+Open PowerShell in the project folder:
+
+    cd C:\AccessFromPhone
+    python -m venv .venv
+    .\.venv\Scripts\python -m pip install --upgrade pip
+    .\.venv\Scripts\python -m pip install -e ".[dev]"
+    .\.venv\Scripts\python -m handoff
+
+Or simply run:   .\run.ps1
+If PowerShell blocks scripts, run once:
+    Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
+
+Package groups (from pyproject.toml):
+    pip install -e .            the app only
+    pip install -e ".[dev]"     + pytest, to run the tests
+    pip install -e ".[build]"   + pyinstaller, pystray, to build the Windows .exe
+
+Run the tests:
+    .\.venv\Scripts\python -m pytest -q
+
+
+----------------------------------------------------------------------
+4. CONFIGURATION  (config.yaml)
+----------------------------------------------------------------------
+
+All settings are in config.yaml in the project folder. Restart the app
+after changing it. Any setting can also be set for one run with an
+environment variable, e.g.  HANDOFF_SERVER__PORT=9000
+
+Important settings:
+  agent.allowed_folders Folders the phone may change. Default: "workspace".
+                        Add your own folders here (full paths).
+  llm.provider          Which AI to use (see section 5). Default: auto
+  commands.enabled      Let the AI propose PowerShell commands. Default: false
+  push.enabled          Phone notifications (needs Firebase/VAPID keys). Default: false
+
+Ports used:
+  8765   phone connects here (same Wi-Fi)
+  8766   this PC's own page (only reachable from the PC itself)
+  8443   "Anywhere" access through Tailscale (optional)
+
+
+----------------------------------------------------------------------
+5. CHOOSE THE AI  (optional)
+----------------------------------------------------------------------
+
+Without any AI, typed commands still work: list, read, find, download,
+move, copy, create, delete.
+
+Option A - Private AI on this PC (Ollama, nothing leaves the PC):
+    1. Install Ollama from https://ollama.com
+    2. In a terminal:   ollama pull qwen2.5:3b
+    3. In config.yaml:  llm.provider: auto   (or ollama)
+    4. Restart the app.
+
+Option B - Hosted AI (Anthropic Claude, more capable):
+    WARNING: your requests and any file text it reads are sent to Anthropic.
+    1. Get an API key from https://console.anthropic.com
+    2. Save it as an environment variable (NEVER put it in config.yaml):
+           setx ANTHROPIC_API_KEY "your-key-here"
+       then close and reopen the terminal.
+    3. In config.yaml:  llm.provider: anthropic
+    4. Restart the app.
+
+The start-up message tells you which AI is active.
+
+
+----------------------------------------------------------------------
+6. PHONE CANNOT CONNECT?  (Windows Firewall)
+----------------------------------------------------------------------
+
+  - Make sure the phone and PC are on the same Wi-Fi.
+  - Windows may ask to allow Python through the firewall: click Allow.
+  - If it still fails, open PowerShell AS ADMINISTRATOR and run:
+
+    New-NetFirewallRule -DisplayName "AccessFromPhone 8765" -Direction Inbound -Protocol TCP -LocalPort 8765 -Action Allow -Profile Public,Private -RemoteAddress LocalSubnet
+
+  - The phone browser may warn "connection not private" on first open
+    (self-made certificate). Choose Advanced > Continue.
+
+
+----------------------------------------------------------------------
+7. USE IT AWAY FROM HOME  (optional, Tailscale)
+----------------------------------------------------------------------
+
+  1. Install Tailscale on the PC and on the phone; sign in to the SAME
+     account on both.
+  2. In the Tailscale admin page: DNS > Enable HTTPS (once, free).
+  3. On the PC's page, open "Connection" and press "Turn on".
+  4. Switch the QR card to "Anywhere" and pair the phone with that code.
+
+The PC must stay on and awake. The app keeps it awake while running.
+
+
+----------------------------------------------------------------------
+8. UNLOCK THE PC FROM THE PHONE  (optional)
+----------------------------------------------------------------------
+
+Set it up once, at the PC:
+  - On the PC's page, open "Unlock" and press "Set up unlocking"
+    (Windows asks for administrator permission once), or in a terminal:
+        .\.venv\Scripts\python -m handoff.unlock.setup install
+  - Choose the Windows sign-in to save, and an unlock PIN (6-32 chars)
+    you will type on the phone.
+
+Other commands:
+    python -m handoff.unlock.setup status
+    python -m handoff.unlock.setup resume
+    python -m handoff.unlock.setup uninstall
+
+
+----------------------------------------------------------------------
+9. BUILD THE ANDROID APP  (optional, developers)
+----------------------------------------------------------------------
+
+  1. Install Android Studio and open it once (installs Java + Android SDK).
+  2. In PowerShell, from the project folder:
+         .\android\build.ps1              debug APK
+         .\android\build.ps1 -Release     release APK (unsigned)
+         .\android\build.ps1 -Test        Android unit tests only
+  3. The APK appears in:  dist\AccessFromPhone-android-debug.apk
+     Copy it to the phone and install it (allow "install unknown apps").
+
+Note: phone notifications need your own Firebase file at
+android\app\google-services.json (not included).
+
+
+----------------------------------------------------------------------
+10. BUILD THE WINDOWS INSTALLER  (optional, developers)
+----------------------------------------------------------------------
+
+  1. Install Inno Setup:   winget install JRSoftware.InnoSetup
+  2. From the project folder:
+         .\packaging\build.ps1
+  3. The Setup .exe appears in the dist folder. Users of the installer
+     do not need Python.
+
+
+----------------------------------------------------------------------
+11. YOUR DATA, BACKUP AND RESET
+----------------------------------------------------------------------
+
+  - The app creates a "data" folder on first run. It holds the database
+    (account, paired phones, chats, audit log), security keys and
+    certificates. It is PRIVATE: never share or commit it.
+  - Backup: stop the app, then copy data\app.db (and app.db-wal if present).
+  - Lost the owner password / start fresh:
+        .\.venv\Scripts\python -m handoff --reset-owner
+  - Full reset: stop the app and delete the "data" folder.
+  - Reinstall packages: delete the ".venv" folder and run START.bat again.
+
+
+----------------------------------------------------------------------
+12. TROUBLESHOOTING
+----------------------------------------------------------------------
+
+  "Python 3.11 or newer is required"
+      Install Python and tick "Add python.exe to PATH", then reopen.
+  "Install failed. Check your internet connection."
+      Check internet / proxy, then run START.bat again.
+  'python' opens the Microsoft Store
+      Settings > Apps > Advanced app settings > App execution aliases:
+      turn off the python.exe aliases, then reinstall Python with PATH.
+  Phone shows "PC offline"
+      The app is not running, the PC is asleep, or it is on another Wi-Fi.
+  Sign-in on the PC page fails
+      Use your Windows ACCOUNT password, not the PIN. 3 wrong tries
+      pause sign-in for 5 minutes.
+
+More details: README.md

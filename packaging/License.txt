@@ -1,0 +1,10 @@
+AccessFromPhone: terms of use
+
+PLACEHOLDER: replace this text with your real terms before you sell or distribute the app.
+
+By installing AccessFromPhone you agree that:
+
+1. The app runs on your PC and can read or change files only in the folders you allow, and only after you approve each change on your phone.
+2. You are responsible for the folders you allow and for who has access to your phone and your PC.
+3. The app is provided as is, without warranty of any kind.
+4. When you use a relay server, your requests pass through it on their way between your phone and your PC. Files stay on your PC.

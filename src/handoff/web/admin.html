@@ -1,0 +1,1144 @@
+<!doctype html>
+<html lang="en">
+<head>
+<script>
+// The opening animation plays on every launch; tests and anyone who wants it off can set afp_splash_off.
+(function () {
+  try {
+    if (localStorage.getItem("afp_splash_off") === "1") document.documentElement.dataset.splash = "off";
+    // once per launch: a reload, a reconnect or coming back to the app does not replay it (a session lasts until the app or tab is closed)
+    else if (sessionStorage.getItem("afp_splash_seen") === "1") document.documentElement.dataset.splash = "off";
+    else sessionStorage.setItem("afp_splash_seen", "1");
+  } catch (e) {}
+})();
+</script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AccessFromPhone · your PC from any device</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%2322d3ee'/%3E%3Cstop offset='1' stop-color='%233b82f6'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='16' cy='16' r='13' fill='none' stroke='url(%23g)' stroke-width='3'/%3E%3Ccircle cx='16' cy='16' r='5.5' fill='url(%23g)'/%3E%3C/svg%3E">
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #0b111b; --panel: #141f2e; --panel-solid: #141f2e; --line: rgba(148, 178, 220, .18); --line-strong: rgba(148, 178, 220, .3);
+    --text: #eaf3ff; --muted: #a2b2c8; --faint: #91a2ba;
+    --a1: #22d3ee; --a2: #3b82f6; --a3: #8b5cf6; --grad: linear-gradient(135deg, var(--a1), var(--a2));
+    --ok: #34d399; --bad: #ff6b81; --warn: #f5b861;
+    --r: 20px; --ease: cubic-bezier(.2, .8, .2, 1);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; }
+  body { background: var(--bg); color: var(--text); font: 15px/1.55 "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, Roboto, sans-serif; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+  h1, h2, h3, p { margin: 0; }
+  button, input { font: inherit; color: inherit; }
+  [hidden] { display: none !important; }
+
+  /* ---------- the living background ---------- */
+  .bg { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
+  .bg::before { content: ""; position: absolute; inset: 0; background-image: linear-gradient(rgba(120, 160, 220, .05) 1px, transparent 1px), linear-gradient(90deg, rgba(120, 160, 220, .05) 1px, transparent 1px); background-size: 44px 44px; -webkit-mask-image: radial-gradient(70% 60% at 50% 35%, #000 25%, transparent 78%); mask-image: radial-gradient(70% 60% at 50% 35%, #000 25%, transparent 78%); }
+  .blob { position: absolute; width: 56vmax; height: 56vmax; border-radius: 50%; filter: blur(90px); opacity: .32; will-change: transform; }
+  .blob.b1 { left: -18vmax; top: -22vmax; background: radial-gradient(circle, #1b6fe8, transparent 65%); animation: drift1 24s ease-in-out infinite alternate; }
+  .blob.b2 { right: -22vmax; top: 6vmax; background: radial-gradient(circle, #0fb7d4, transparent 65%); animation: drift2 30s ease-in-out infinite alternate; opacity: .22; }
+  .blob.b3 { left: 22vmax; bottom: -34vmax; background: radial-gradient(circle, #6d4ae8, transparent 65%); animation: drift3 28s ease-in-out infinite alternate; opacity: .2; }
+  @keyframes drift1 { to { transform: translate3d(9vmax, 7vmax, 0) scale(1.08); } }
+  @keyframes drift2 { to { transform: translate3d(-8vmax, 9vmax, 0) scale(.94); } }
+  @keyframes drift3 { to { transform: translate3d(6vmax, -8vmax, 0) scale(1.1); } }
+
+  /* ---------- shared pieces ---------- */
+  .brand { display: inline-flex; align-items: center; gap: 12px; }
+  .logo { width: 38px; height: 38px; flex: none; }
+  .logo .ring, .logo .core { transform-origin: 50% 50%; }
+  .loading .logo .ring { animation: spin 2s linear infinite; }
+  .wordmark { font-weight: 700; letter-spacing: .32em; font-size: .9rem; background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes breathe { 50% { transform: scale(1.18); } }
+
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); box-shadow: 0 24px 60px -28px rgba(0, 0, 0, .7), inset 0 1px 0 rgba(255, 255, 255, .04); }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 42px; padding: 0 18px; border-radius: 12px; border: 1px solid var(--line-strong); background: rgba(255, 255, 255, .04); cursor: pointer; font-weight: 600; font-size: .92rem; transition: transform .18s var(--ease), border-color .2s, background .2s, box-shadow .25s; white-space: nowrap; }
+  .btn:hover { border-color: var(--a1); background: rgba(34, 211, 238, .08); }
+  .btn:active { transform: scale(.97); }
+  .btn:focus-visible, input:focus-visible { outline: 2px solid var(--a1); outline-offset: 2px; }
+  .btn.primary { background: var(--grad); color: #04101f; border-color: transparent; box-shadow: 0 10px 30px -10px rgba(34, 211, 238, .55); }
+  .btn.primary:hover { box-shadow: 0 14px 38px -8px rgba(34, 211, 238, .75); filter: brightness(1.06); }
+  .btn.danger { color: var(--bad); }
+  .btn.danger:hover { border-color: var(--bad); background: rgba(255, 107, 129, .08); }
+  .btn.sm { min-height: 34px; padding: 0 12px; font-size: .84rem; border-radius: 10px; }
+  .btn.ghost { border-color: transparent; background: transparent; color: var(--muted); }
+  .btn.ghost:hover { color: var(--text); background: rgba(255, 255, 255, .05); border-color: transparent; }
+  .btn[disabled] { opacity: .5; pointer-events: none; }
+  .btn svg, .ico { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .spinner { width: 18px; height: 18px; border-radius: 50%; border: 2px solid rgba(4, 16, 31, .3); border-top-color: #04101f; animation: spin .7s linear infinite; }
+
+  .chip { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 99px; border: 1px solid var(--line); background: rgba(255, 255, 255, .03); font-size: .82rem; color: var(--muted); }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 0 0 rgba(52, 211, 153, .6); animation: ping 2.2s infinite; }
+  .dot.off { background: var(--bad); animation: none; box-shadow: none; }
+  @keyframes ping { 70% { box-shadow: 0 0 0 9px rgba(52, 211, 153, 0); } 100% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0); } }
+  .tag { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 99px; font-size: .74rem; font-weight: 600; letter-spacing: .02em; flex: none; }
+  .tag.ok { color: var(--ok); background: rgba(52, 211, 153, .1); border: 1px solid rgba(52, 211, 153, .25); }
+  .tag.bad { color: var(--bad); background: rgba(255, 107, 129, .1); border: 1px solid rgba(255, 107, 129, .25); }
+  .tag.live::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; animation: breathe 1.6s infinite; }
+
+  /* entrance choreography */
+  .rise { opacity: 0; transform: translate3d(0, 18px, 0); animation: rise .8s var(--ease) forwards; animation-delay: calc(var(--i, 0) * 90ms); }
+  @keyframes rise { to { opacity: 1; transform: none; } }
+
+  /* ---------- sign-in / setup ---------- */
+  .stage { min-height: 100vh; display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr); gap: clamp(24px, 5vw, 80px); align-items: center; width: min(1240px, 100% - 48px); margin: 0 auto; padding: 40px 0; }
+  .hero { display: flex; flex-direction: column; gap: 26px; }
+  .hero h1 { font-size: clamp(2.2rem, 4.6vw, 3.7rem); line-height: 1.04; letter-spacing: -.035em; font-weight: 750; }
+  .hero h1 em { font-style: normal; background: linear-gradient(120deg, var(--a1), var(--a2) 55%, var(--a3)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .hero .lead { color: var(--muted); font-size: 1.1rem; max-width: 34em; }
+  .feats { list-style: none; padding: 0; margin: 4px 0 0; display: grid; gap: 12px; }
+  .feats li { display: flex; align-items: center; gap: 12px; color: #c4d4ec; }
+  .feats .ico { width: 34px; height: 34px; padding: 8px; border-radius: 10px; background: rgba(34, 211, 238, .09); border: 1px solid rgba(34, 211, 238, .2); color: var(--a1); }
+  .scene { width: min(100%, 520px); margin-top: 4px; }
+  .scene svg { width: 100%; height: auto; overflow: visible; display: block; }
+  .scene .link { stroke: url(#lg); stroke-width: 2; fill: none; stroke-dasharray: 6 8; animation: flow 1.4s linear infinite; }
+  @keyframes flow { to { stroke-dashoffset: -28; } }
+  .scene .pulse { transform-origin: center; transform-box: fill-box; animation: wave 3s ease-out infinite; }
+  .scene .pulse.p2 { animation-delay: 1s; } .scene .pulse.p3 { animation-delay: 2s; }
+  @keyframes wave { from { transform: scale(.4); opacity: .7; } to { transform: scale(1.5); opacity: 0; } }
+  .scene .screen-glow { animation: glow 4s ease-in-out infinite alternate; }
+  @keyframes glow { from { opacity: .55; } to { opacity: 1; } }
+
+  .panel { display: grid; place-items: center; }
+  .auth { width: min(100%, 440px); padding: 34px 32px 30px; }
+  .auth h2 { font-size: 1.55rem; letter-spacing: -.02em; margin-bottom: 6px; }
+  .auth .sub { color: var(--muted); margin-bottom: 22px; }
+  .field { display: block; margin-bottom: 14px; }
+  .field > span { display: block; font-size: .8rem; font-weight: 600; letter-spacing: .02em; color: var(--muted); margin-bottom: 6px; }
+  .input { position: relative; }
+  .input input { width: 100%; height: 48px; padding: 0 44px 0 44px; border-radius: 13px; border: 1px solid var(--line-strong); background: rgba(4, 10, 20, .6); transition: border-color .2s, box-shadow .25s, background .2s; }
+  .input input:focus { outline: none; border-color: var(--a1); box-shadow: 0 0 0 4px rgba(34, 211, 238, .14); background: rgba(4, 10, 20, .85); }
+  /* These fields already have a show/hide button; suppress Edge's duplicate. */
+  .input input[type="password"]::-ms-reveal { display: none; }
+  .input .lead-ico { position: absolute; left: 14px; top: 50%; translate: 0 -50%; width: 18px; height: 18px; color: var(--faint); transition: color .2s; pointer-events: none; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .input:focus-within .lead-ico { color: var(--a1); }
+  .input .eye { position: absolute; right: 6px; top: 50%; translate: 0 -50%; width: 36px; height: 36px; display: grid; place-items: center; border: 0; background: none; color: var(--faint); border-radius: 9px; cursor: pointer; }
+  .input .eye:hover { color: var(--text); background: rgba(255, 255, 255, .06); }
+  .err { min-height: 1.5em; color: var(--bad); font-size: .9rem; margin: 2px 0 10px; }
+  .err.show { animation: shake .4s; }
+  @keyframes shake { 25% { transform: translateX(-6px); } 50% { transform: translateX(5px); } 75% { transform: translateX(-3px); } }
+  .auth .btn.primary { width: 100%; min-height: 48px; font-size: 1rem; }
+  .aside { margin-top: 16px; display: flex; gap: 10px; align-items: flex-start; color: var(--faint); font-size: .84rem; }
+  .aside .ico { width: 16px; height: 16px; margin-top: 3px; color: var(--a1); }
+  .linkbtn { background: none; border: 0; padding: 0; color: var(--a1); cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+  .recovery { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin: 18px 0 14px; }
+  .recovery b { font: 600 1.25rem/1 ui-monospace, "Cascadia Code", Consolas, monospace; letter-spacing: .12em; text-align: center; padding: 16px 6px; border-radius: 12px; background: rgba(245, 184, 97, .07); border: 1px dashed rgba(245, 184, 97, .45); color: var(--warn); user-select: all; }
+  .check { display: flex; align-items: center; gap: 10px; margin: 16px 0; cursor: pointer; color: #c4d4ec; }
+  .check input { width: 18px; height: 18px; accent-color: var(--a1); }
+
+/* ---------- dashboard ---------- */
+  .wrap { width: min(1120px, 100% - 40px); margin: 0 auto; padding: 22px 0 70px; }
+  .nav { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; padding: 6px 0 26px; }
+  .nav .right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .avatar { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; background: var(--grad); color: #04101f; font-weight: 800; font-size: .8rem; }
+  .greet { margin-bottom: 22px; }
+  .greet h1 { font-size: clamp(1.7rem, 3.4vw, 2.5rem); letter-spacing: -.03em; line-height: 1.1; }
+  .greet h1 em { font-style: normal; background: linear-gradient(120deg, var(--a1), var(--a2) 60%, var(--a3)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .greet p { color: var(--muted); margin-top: 8px; }
+
+  .connect { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: clamp(22px, 4vw, 54px); align-items: center; padding: clamp(22px, 3.4vw, 40px); position: relative; overflow: hidden; }
+  .connect::after { content: ""; position: absolute; right: -90px; top: -90px; width: 300px; height: 300px; border-radius: 50%; background: radial-gradient(circle, rgba(34, 211, 238, .16), transparent 70%); pointer-events: none; }
+  .qrbox { position: relative; width: 268px; height: 268px; display: grid; place-items: center; }
+  .qrbox .ringsvg { position: absolute; inset: 0; width: 100%; height: 100%; transform: rotate(-90deg); }
+  .qrbox .ringsvg circle { fill: none; stroke-width: 1.4; }
+  .qrbox .track { stroke: rgba(148, 178, 220, .12); }
+  .qrbox .prog { stroke: url(#rg); stroke-linecap: round; stroke-dasharray: 100; stroke-dashoffset: 0; }
+  .qrbox .prog.run { animation: drain linear forwards; animation-duration: var(--dur, 120s); }
+  @keyframes drain { to { stroke-dashoffset: 100; } }
+  .qr { position: relative; width: 224px; height: 224px; padding: 12px; background: #fff; border-radius: 20px; line-height: 0; box-shadow: 0 0 0 1px rgba(255, 255, 255, .6), 0 20px 50px -14px rgba(34, 211, 238, .35); animation: qrin .7s var(--ease) both; overflow: hidden; }
+  .qr svg { width: 100%; height: 100%; }
+  .qr .sweep { position: absolute; left: 0; right: 0; top: 0; height: 46%; background: linear-gradient(180deg, transparent, rgba(34, 211, 238, .28)); border-bottom: 2px solid rgba(34, 211, 238, .85); animation: sweep 2.8s ease-in-out infinite; }
+  @keyframes sweep { 0% { transform: translateY(-100%); } 100% { transform: translateY(220%); } }
+  @keyframes qrin { from { opacity: 0; transform: scale(.88); filter: blur(6px); } to { opacity: 1; transform: none; filter: none; } }
+  .qrbox .corner { position: absolute; width: 30px; height: 30px; border: 3px solid var(--a1); animation: bracket 2.4s ease-in-out infinite; }
+  .qrbox .corner.tl { left: 0; top: 0; border-right: 0; border-bottom: 0; border-top-left-radius: 14px; }
+  .qrbox .corner.tr { right: 0; top: 0; border-left: 0; border-bottom: 0; border-top-right-radius: 14px; }
+  .qrbox .corner.bl { left: 0; bottom: 0; border-right: 0; border-top: 0; border-bottom-left-radius: 14px; }
+  .qrbox .corner.br { right: 0; bottom: 0; border-left: 0; border-top: 0; border-bottom-right-radius: 14px; }
+  @keyframes bracket { 50% { opacity: .4; transform: scale(.94); } }
+  .connect h2 { font-size: 1.5rem; letter-spacing: -.02em; }
+  .connect .sub { color: var(--muted); margin: 6px 0 20px; max-width: 32em; }
+  .steps { list-style: none; counter-reset: s; padding: 0; margin: 0 0 22px; display: grid; gap: 12px; }
+  .steps li { counter-increment: s; display: flex; align-items: flex-start; gap: 12px; color: #c4d4ec; }
+  .steps li::before { content: counter(s); flex: none; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font-size: .8rem; font-weight: 700; color: var(--a1); background: rgba(34, 211, 238, .1); border: 1px solid rgba(34, 211, 238, .3); }
+  .codeline { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .code { font: 650 1.7rem/1 ui-monospace, "Cascadia Code", Consolas, monospace; letter-spacing: .16em; padding: 12px 18px; border-radius: 14px; background: rgba(4, 10, 20, .6); border: 1px solid var(--line-strong); color: var(--a1); text-shadow: 0 0 22px rgba(34, 211, 238, .45); }
+  .timer { color: var(--faint); font-size: .85rem; margin-top: 12px; font-variant-numeric: tabular-nums; }
+
+  .stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin: 18px 0; }
+  .stat { padding: 18px 20px; display: flex; align-items: center; gap: 14px; }
+  .stat .ico { width: 42px; height: 42px; padding: 10px; border-radius: 12px; background: rgba(34, 211, 238, .09); border: 1px solid rgba(34, 211, 238, .22); color: var(--a1); }
+  .stat small { display: block; color: var(--faint); font-size: .76rem; letter-spacing: .06em; text-transform: uppercase; }
+  .stat strong { font-size: 1.12rem; font-weight: 650; }
+
+  .section-head { display: flex; align-items: baseline; justify-content: space-between; margin: 30px 2px 14px; }
+  .section-head h2 { font-size: 1.15rem; }
+  .section-head span { color: var(--faint); font-size: .86rem; }
+  .devices { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+  .device { padding: 20px; display: flex; flex-direction: column; gap: 16px; transition: transform .25s var(--ease), border-color .25s; animation: rise .6s var(--ease) both; }
+  .device:hover { transform: translateY(-3px); border-color: var(--line-strong); }
+  .device.fresh { animation: rise .6s var(--ease) both, arrive 2.4s ease-out; }
+  @keyframes arrive { 0% { box-shadow: 0 0 0 0 rgba(52, 211, 153, .65); border-color: var(--ok); } 100% { box-shadow: 0 0 0 26px rgba(52, 211, 153, 0); } }
+  .device .top { display: flex; align-items: center; gap: 14px; }
+  .device .badge { width: 46px; height: 46px; border-radius: 14px; display: grid; place-items: center; background: linear-gradient(145deg, rgba(34, 211, 238, .16), rgba(59, 130, 246, .12)); border: 1px solid rgba(34, 211, 238, .24); color: var(--a1); flex: none; }
+  .device.blocked .badge { background: rgba(255, 107, 129, .08); border-color: rgba(255, 107, 129, .25); color: var(--bad); }
+  .device .badge .ico { width: 24px; height: 24px; }
+  .device h3 { font-size: 1.04rem; font-weight: 650; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .device .meta { color: var(--faint); font-size: .84rem; }
+  .device .grow { min-width: 0; flex: 1; }
+  .device .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .empty { padding: 44px 24px; text-align: center; display: grid; justify-items: center; gap: 12px; color: var(--muted); }
+  .empty svg { width: 120px; height: auto; opacity: .9; }
+  .empty h3 { color: var(--text); font-size: 1.1rem; }
+  .foot { margin-top: 38px; text-align: center; color: var(--faint); font-size: .84rem; }
+
+  .details { margin-top: 18px; padding: 4px 22px; }
+  .details summary { cursor: pointer; padding: 16px 0; color: var(--muted); font-weight: 600; list-style: none; display: flex; align-items: center; gap: 10px; }
+  .details summary::-webkit-details-marker { display: none; }
+  .details .body { padding: 0 0 20px; display: grid; gap: 10px; max-width: 380px; }
+
+
+  /* ---------- connection card + tabs ---------- */
+  .tabs { display: inline-flex; gap: 4px; padding: 4px; margin-bottom: 14px; border-radius: 14px; border: 1px solid var(--line); background: rgba(4, 10, 20, .5); }
+  .tab { display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 0 14px; border-radius: 10px; border: 0; background: transparent; color: var(--muted); font-weight: 600; font-size: .86rem; cursor: pointer; transition: background .2s, color .2s; }
+  .tab:hover { color: var(--text); }
+  .tab[aria-selected="true"] { color: #04101f; background: var(--grad); box-shadow: 0 6px 18px -8px rgba(34, 211, 238, .7); }
+  .tab:focus-visible { outline: 2px solid var(--a1); outline-offset: 2px; }
+  .conn { padding: 22px 22px 8px; }
+  .conn-row { display: flex; align-items: center; gap: 14px; padding: 16px 0; border-top: 1px solid var(--line); }
+  .conn-row.col { flex-direction: column; align-items: stretch; gap: 12px; }
+  .conn-head { display: flex; align-items: center; gap: 14px; }
+  .conn-ico { flex: none; width: 44px; height: 44px; display: grid; place-items: center; border-radius: 13px; color: var(--a1); background: rgba(34, 211, 238, .09); border: 1px solid rgba(34, 211, 238, .22); }
+  .conn .grow { flex: 1; min-width: 0; }
+  .conn h3 { font-size: 1rem; font-weight: 650; }
+  .conn p { color: var(--text); font-size: .9rem; word-break: break-all; }
+  .conn small { display: block; color: var(--faint); font-size: .8rem; margin-top: 2px; }
+  .tag:not(.ok):not(.bad) { color: var(--muted); border: 1px solid var(--line-strong); background: rgba(255, 255, 255, .03); }
+  .checks { list-style: none; margin: 0; padding: 0 0 0 58px; display: grid; gap: 10px; }
+  .chk { display: flex; gap: 12px; align-items: flex-start; }
+  .chk .mark { flex: none; width: 22px; height: 22px; display: grid; place-items: center; border-radius: 50%; border: 1.5px solid var(--line-strong); color: #04101f; margin-top: 1px; }
+  .chk .mark i { width: 8px; height: 8px; border-radius: 50%; background: var(--line-strong); }
+  .chk.ok .mark { background: var(--ok); border-color: var(--ok); } .chk.ok .mark .ico { width: 14px; height: 14px; stroke-width: 3; }
+  .chk b { font-weight: 600; font-size: .9rem; } .chk small { margin-top: 1px; }
+  .row-actions { display: flex; gap: 10px; padding-left: 58px; flex-wrap: wrap; }
+  .row-actions a { text-decoration: none; color: inherit; }
+  .macline { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-left: 58px; padding: 10px 12px; border-radius: 12px; background: rgba(4, 10, 20, .5); border: 1px solid var(--line); font-size: .84rem; color: var(--muted); }
+  .macline code { font: 600 .9rem ui-monospace, Consolas, monospace; color: var(--a1); letter-spacing: .06em; }
+  .warnline { flex-basis: 100%; color: var(--warn) !important; }
+  @media (max-width: 640px) { .checks, .row-actions, .macline { padding-left: 0; margin-left: 0; } }
+
+  /* ---------- modal + toast ---------- */
+  .scrim { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; padding: 20px; background: rgba(2, 6, 12, .66); backdrop-filter: blur(6px); animation: fade .2s ease both; }
+  .modal { width: min(100%, 420px); padding: 26px; background: var(--panel-solid); border: 1px solid var(--line-strong); border-radius: 20px; box-shadow: 0 40px 90px -20px #000; animation: pop .32s var(--ease) both; }
+  .modal h3 { font-size: 1.15rem; margin-bottom: 6px; }
+  .modal p { color: var(--muted); margin-bottom: 16px; }
+  .modal .row { display: flex; justify-content: flex-end; gap: 10px; margin-top: 18px; }
+  .modal input { width: 100%; height: 46px; padding: 0 14px; border-radius: 12px; border: 1px solid var(--line-strong); background: rgba(4, 10, 20, .6); }
+  .modal input:focus { outline: none; border-color: var(--a1); box-shadow: 0 0 0 4px rgba(34, 211, 238, .14); }
+  @keyframes fade { from { opacity: 0; } }
+  @keyframes pop { from { opacity: 0; transform: translateY(14px) scale(.96); } }
+  .toasts { position: fixed; right: 20px; bottom: 20px; z-index: 60; display: grid; gap: 10px; }
+  .toast { display: flex; align-items: center; gap: 12px; min-width: 260px; max-width: 380px; padding: 14px 16px; border-radius: 14px; background: var(--panel-solid); border: 1px solid var(--line-strong); box-shadow: 0 24px 50px -16px #000; animation: toastin .5s var(--ease) both; }
+  .toast.out { animation: toastout .35s ease both; }
+  .toast .tick { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: rgba(52, 211, 153, .14); color: var(--ok); flex: none; }
+  .toast .tick .ico { width: 17px; height: 17px; stroke-width: 2.6; }
+  .toast.warn .tick { background: rgba(245, 184, 97, .14); color: var(--warn); }
+  .toast b { display: block; }
+  .toast span { color: var(--muted); font-size: .86rem; }
+  @keyframes toastin { from { opacity: 0; transform: translateX(30px) scale(.95); } }
+  @keyframes toastout { to { opacity: 0; transform: translateX(30px); } }
+
+  .loading { min-height: 100vh; display: grid; place-items: center; }
+  .loading .logo { width: 64px; height: 64px; }
+
+  @media (max-width: 980px) {
+    .stage { grid-template-columns: 1fr; padding: 28px 0 50px; }
+    .scene { display: none; }
+    .connect { grid-template-columns: 1fr; justify-items: center; text-align: center; }
+    .steps li { text-align: left; }
+    .codeline { justify-content: center; }
+    .stats { grid-template-columns: 1fr; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+    .rise { opacity: 1; transform: none; }
+  }
+
+  /* ---------- the dashboard: a menu on the left, one section at a time ---------- */
+  .shell { display: grid; grid-template-columns: 244px minmax(0, 1fr); min-height: 100vh; }
+  .rail { position: sticky; top: 0; height: 100vh; padding: 20px 14px; display: flex; flex-direction: column; gap: 18px; border-right: 1px solid var(--line); background: rgba(5, 10, 20, .72); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
+  .rail .brand { padding: 4px 8px; }
+  .rnavs { display: grid; gap: 4px; }
+  .rnav { display: flex; align-items: center; gap: 12px; padding: 11px 13px; border-radius: 12px; border: 0; background: none; color: var(--muted); font-weight: 600; font-size: .93rem; cursor: pointer; text-align: left; transition: background .2s, color .2s; }
+  .rnav:hover { color: var(--text); background: rgba(255, 255, 255, .04); }
+  .rnav.on { color: var(--text); background: rgba(34, 211, 238, .1); box-shadow: inset 3px 0 0 var(--a1); }
+  .rnav:focus-visible { outline: 2px solid var(--a1); outline-offset: 2px; }
+  .rnav .ico { width: 19px; height: 19px; }
+  .who { margin-top: auto; display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: 14px; background: rgba(255, 255, 255, .03); border: 1px solid var(--line); }
+  .who .grow { flex: 1; min-width: 0; } .who b { display: block; font-size: .9rem; } .who small { color: var(--faint); font-size: .76rem; }
+  .dmain { padding: 26px clamp(18px, 3vw, 38px) 60px; display: flex; flex-direction: column; gap: 18px; min-width: 0; max-width: 1380px; width: 100%; }
+  .dmain.enter { animation: rise .22s var(--ease) both; }
+  .dhead { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .dhead .grow { flex: 1; min-width: 220px; }
+  .dhead h1 { font-size: clamp(1.5rem, 2.6vw, 2.1rem); letter-spacing: -.025em; line-height: 1.12; }
+  .dhead p { color: var(--muted); margin-top: 4px; }
+  .dtiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px; }
+  .dtile { padding: 14px 16px; border-radius: 16px; background: var(--panel); border: 1px solid var(--line); }
+  .dtile small { color: var(--faint); font-size: .72rem; letter-spacing: .07em; text-transform: uppercase; }
+  .dtile strong { display: block; font-size: 1.25rem; margin-top: 2px; font-weight: 650; }
+  .bar { height: 5px; border-radius: 5px; background: rgba(148, 178, 220, .14); margin-top: 9px; overflow: hidden; }
+  .bar i { display: block; height: 100%; background: var(--grad); transition: width .6s var(--ease); }
+  .bar i[data-tone="warn"] { background: var(--warn); } .bar i[data-tone="bad"] { background: var(--bad); }
+  .dgrid { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr) 300px; gap: 16px; align-items: start; }
+  .stack { display: grid; gap: 16px; min-width: 0; }
+  .dcard { padding: 18px; }
+  .dcard h2 { font-size: 1rem; display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .dcard h2 > .ico { color: var(--a1); } .dcard h2 .tag { margin-left: auto; }
+  .dcard .meta, .meta { color: var(--muted); font-size: .9rem; line-height: 1.5; }
+  .dev { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 14px; background: rgba(4, 10, 20, .45); border: 1px solid var(--line); margin-top: 8px; }
+  .person { display: flex; align-items: center; flex-wrap: wrap; gap: 10px 12px; padding: 12px 0; border-top: 1px solid var(--line); }
+  .person small { display: block; color: var(--muted); }
+  .dcard > .meta:first-of-type { margin: -4px 0 14px; max-width: 70ch; }
+  .pchoose { display: flex; align-items: center; flex-wrap: wrap; gap: 10px 12px; margin: 0 0 4px; color: var(--muted); font-size: .86rem; font-weight: 600; }
+  .prow { display: flex; align-items: center; flex-wrap: wrap; gap: 12px 14px; padding: 14px; margin-top: 10px; border-radius: 16px; background: rgba(4, 10, 20, .4); border: 1px solid var(--line); transition: border-color .2s, background-color .2s; }
+  .prow:hover { border-color: var(--line-strong); background: rgba(4, 10, 20, .55); }
+  .prow .dico { width: 42px; height: 42px; border-radius: 13px; display: grid; place-items: center; flex: none; background: rgba(34, 211, 238, .09); border: 1px solid rgba(34, 211, 238, .22); color: var(--a1); }
+  .prow .grow { flex: 1 1 220px; min-width: 0; display: grid; gap: 3px; }
+  .prow b { font-size: .98rem; display: flex; align-items: center; overflow-wrap: anywhere; }
+  .pstat { display: flex; align-items: center; gap: 7px; font-size: .84rem; font-weight: 600; color: var(--muted); }
+  .sdot { width: 8px; height: 8px; border-radius: 50%; background: var(--faint); flex: none; }
+  .pstat.ok { color: var(--ok); } .pstat.ok .sdot { background: var(--ok); box-shadow: 0 0 0 3px rgba(52, 211, 153, .16); }
+  .phint { color: var(--faint); font-size: .8rem; line-height: 1.4; }
+  .pact { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-left: auto; }
+  @media (max-width: 640px) { .pact { margin-left: 0; width: 100%; } .pact .btn, .pact .seg { flex: 1 1 auto; } .pact .seg { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; } }
+  .device .actions .btn { flex: 1 1 auto; }
+  .seg { display: inline-grid; grid-auto-flow: column; gap: 3px; padding: 3px; border-radius: 12px; background: rgba(124, 138, 165, .14); }
+  .seg-b { min-height: 34px; padding: 0 12px; border-radius: 9px; border: 0; background: none; color: var(--muted); font: inherit; font-size: .82rem; font-weight: 650; cursor: pointer; transition: background-color .25s ease, color .25s ease; }
+  .seg-b.on { color: var(--a1); background: rgba(34, 211, 238, .16); box-shadow: inset 0 0 0 1px rgba(34, 211, 238, .38); }
+  .seg-b:focus-visible { outline: 2px solid var(--a1); outline-offset: 1px; }
+  .seg-b[disabled] { opacity: .4; cursor: not-allowed; }
+  .dev .dico { width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center; flex: none; background: rgba(34, 211, 238, .09); border: 1px solid rgba(34, 211, 238, .22); color: var(--a1); }
+  .dev .grow { flex: 1; min-width: 0; } .dev b { display: block; font-size: .95rem; } .dev small { display: block; color: var(--faint); font-size: .8rem; word-break: break-all; }
+  .foot-actions { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+  .act { display: flex; align-items: center; gap: 11px; padding: 9px 0; border-bottom: 1px solid var(--line); }
+  .act:last-child { border-bottom: 0; } .act .grow { flex: 1; min-width: 0; } .act b { font-weight: 600; font-size: .9rem; }
+  .adot { width: 9px; height: 9px; border-radius: 50%; background: var(--ok); flex: none; } .act.warn .adot { background: var(--warn); } .act.bad .adot { background: var(--bad); }
+  .act time { color: var(--faint); font-size: .8rem; white-space: nowrap; }
+  .mini-pair { padding: 18px; text-align: center; }
+  .mini-pair h2 { font-size: 1rem; display: flex; align-items: center; gap: 10px; justify-content: center; margin-bottom: 12px; } .mini-pair h2 .ico { color: var(--a1); }
+  .mini-qr { width: 196px; height: 196px; margin: 0 auto 12px; padding: 10px; background: #fff; border-radius: 16px; line-height: 0; box-shadow: 0 0 0 1px rgba(255, 255, 255, .6), 0 18px 44px -14px rgba(34, 211, 238, .35); }
+  .mini-qr svg { width: 100%; height: 100%; }
+  .mini-code { font: 650 1.45rem/1 ui-monospace, Consolas, monospace; letter-spacing: .18em; color: var(--a1); }
+  .mini-pair .timer { margin-top: 8px; } .mini-pair .foot-actions { justify-content: center; }
+  .kv { display: flex; justify-content: space-between; gap: 16px; padding: 9px 0; border-bottom: 1px solid var(--line); color: var(--muted); } .kv b { color: var(--text); font-weight: 600; }
+  @media (max-width: 1180px) { .dgrid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } .mini-pair { grid-column: 1 / -1; } }
+  @media (max-width: 900px) {
+    .shell { grid-template-columns: 1fr; }
+    .rail { position: sticky; top: 0; height: auto; z-index: 20; flex-direction: row; align-items: center; padding: 10px 12px; gap: 10px; border-right: 0; border-bottom: 1px solid var(--line); overflow-x: auto; }
+    .rail .brand .wordmark { display: none; } .rnavs { display: flex; gap: 4px; } .rnav { padding: 10px 12px; } .rnav span { display: none; } .rnav.on span { display: inline; }
+    .who { margin: 0 0 0 auto; padding: 6px; } .who .grow { display: none; }
+    .dgrid { grid-template-columns: 1fr; }
+  }
+
+  /* ---------- Calm, responsive dashboard ---------- */
+  :root { --grad: var(--a1); }
+  .bg { display: none; }
+  body { background: var(--bg); }
+  .card, .rail { backdrop-filter: none; -webkit-backdrop-filter: none; box-shadow: none; }
+  .card { background: var(--panel-solid); } .rail { background: var(--panel-solid); }
+  .btn.primary, .tab[aria-selected="true"] { box-shadow: none; } .btn.primary:hover { box-shadow: none; filter: brightness(1.08); }
+  .hero h1 em, .greet h1 em, .dhead h1 em { background: none; -webkit-text-fill-color: currentColor; color: var(--a1); }
+  .qr, .mini-qr { box-shadow: none; } .connect::after { display: none; }
+  .wordmark { background: none; -webkit-text-fill-color: currentColor; color: var(--a1); }
+  .wordmark { color: var(--text); letter-spacing: -.025em; font-size: 1rem; }
+  .brand { gap: 10px; min-width: 0; }
+  .logo { width: 30px; height: 30px; }
+  .shell { grid-template-columns: 248px minmax(0, 1fr); }
+  .rail { background: #101925; padding: 28px 16px 18px; gap: 32px; height: 100dvh; }
+  .rnav { min-height: 48px; border: 1px solid transparent; }
+  .rnav.on { color: var(--a1); border-color: rgba(34, 211, 238, .2); box-shadow: none; }
+  .rnavs { gap: 6px; }
+  .dmain { max-width: 1360px; margin: 0 auto; padding: 36px clamp(20px, 3vw, 48px) 48px; gap: 24px; }
+  .dhead { padding-bottom: 4px; }
+  .dhead h1 { font-weight: 700; line-height: 1.2; }
+  .dhead .grow { min-width: 0; }
+  .eyebrow { display: block; margin-bottom: 8px; color: var(--a1); font-size: .72rem; font-weight: 650; letter-spacing: .12em; text-transform: uppercase; }
+  .dhead p { margin-top: 8px; font-size: .92rem; }
+  .dhead .chip { max-width: 100%; overflow-wrap: anywhere; }
+  .dtiles { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+  .dtile { padding: 18px; }
+  .dtile strong { font-size: clamp(1.1rem, 1.7vw, 1.6rem); font-weight: 650; font-variant-numeric: tabular-nums; line-height: 1.4; overflow-wrap: anywhere; }
+  .bar { height: 4px; margin-top: 14px; }
+  .dgrid { grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 20px; align-items: stretch; }
+  .dgrid .mini-pair { grid-column: 2; display: flex; flex-direction: column; justify-content: center; }
+  .dgrid > :last-child { grid-column: 1 / -1; }
+  .dcard, .mini-pair { padding: 22px; min-width: 0; }
+  .dcard h2 { font-size: 1.04rem; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+  .dcard h2 .tag { font-size: .72rem; }
+  .dev { padding: 12px; background: var(--bg); }
+  .dev b, .act b, .who b { overflow-wrap: anywhere; }
+  .dev small { word-break: normal; overflow-wrap: anywhere; }
+  .act { align-items: flex-start; padding: 12px 0; }
+  .act .adot { margin-top: 6px; }
+  .act time { font-size: .75rem; }
+  .mini-qr { width: min(100%, 168px); height: auto; aspect-ratio: 1; margin: 8px auto 16px; }
+  .mini-code { font-size: 1.4rem; letter-spacing: .1em; overflow-wrap: anywhere; }
+  .timer { color: var(--muted); }
+  .btn, .btn.sm { min-height: 44px; border-radius: 11px; }
+  .btn.sm { padding: 0 14px; }
+  .dot, .tag.live::before, .qrbox .corner { animation: none; box-shadow: none; }
+  .qr .sweep { display: none; }
+  .device { animation-duration: .22s; }
+  .device:hover { transform: none; }
+  .devices { grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); }
+  .section-head { gap: 12px; flex-wrap: wrap; }
+  .kv { flex-wrap: wrap; } .kv b { overflow-wrap: anywhere; min-width: 0; }
+  .conn-row { flex-wrap: wrap; }
+  .modal { max-height: calc(100dvh - 40px); overflow-y: auto; }
+  .modal .row { flex-wrap: wrap; }
+  .stage { gap: 48px; }
+  .rise { animation-duration: .3s; animation-delay: 0s; }
+  :focus-visible { outline: 2px solid var(--a1); outline-offset: 3px; }
+  @media (max-width: 1100px) { .dtiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 900px) {
+    .shell { grid-template-columns: 1fr; }
+    .rail { height: auto; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; padding: calc(env(safe-area-inset-top, 0px) + 12px) 16px 12px; overflow: visible; }
+    .rail .brand { padding: 0; } .rail .brand .wordmark { display: inline; font-size: .92rem; }
+    .rnavs { grid-column: 1 / -1; grid-row: 2; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; }
+    .rnav { padding: 8px; gap: 6px; justify-content: center; font-size: .8rem; min-width: 0; }
+    .rnav span { display: inline; } .rnav .ico { width: 16px; height: 16px; flex: none; }
+    .who { grid-column: 2; grid-row: 1; padding: 0; border: 0; background: none; }
+    .who .avatar { display: none; }
+    .dmain { padding: 24px 20px 40px; gap: 20px; }
+    .dhead h1 { font-size: 1.65rem; }
+  }
+  @media (max-width: 620px) {
+    .dgrid { grid-template-columns: minmax(0, 1fr); }
+    .dgrid .mini-pair { grid-column: auto; grid-row: auto; }
+    .dhead { align-items: flex-start; }
+    .dhead .grow { flex-basis: 100%; }
+    .dtile { padding: 14px; }
+    .dcard, .mini-pair, .conn { padding: 18px; }
+    .connect { padding: 20px 16px; }
+    .stage { width: calc(100% - 32px); gap: 24px; }
+    .hero { gap: 16px; } .hero h1 { font-size: 2rem; }
+    .hero .feats { display: none; }
+    .act { flex-wrap: wrap; } .act time { margin-left: 20px; }
+    .code { font-size: 1.35rem; letter-spacing: .09em; }
+    input { font-size: 16px; }
+  }
+  @media (max-height: 500px) { .rail { position: static; } }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-delay: 0s !important; transition-delay: 0s !important; scroll-behavior: auto !important; }
+  }
+
+/* ---------- A brief introduction, never an artificial loading screen ---------- */
+.splash { position: fixed; inset: 0; z-index: 200; display: grid; place-items: center; background: var(--bg); color: var(--text); pointer-events: none; animation: sp-out 0.2s ease 0.6s forwards; }
+@keyframes sp-out { from { opacity: 1; } to { opacity: 0; visibility: hidden; } }
+.sp-center { display: grid; justify-items: center; text-align: center; padding: 0 28px; }
+@keyframes sp-leave { to { transform: scale(1.05); } }
+.sp-mark { overflow: visible; margin-bottom: 22px; }
+.sp-ring { fill: none; stroke: var(--a1); stroke-width: 3.4; stroke-linecap: round; stroke-dasharray: 100; stroke-dashoffset: 100; transform-origin: 50% 50%; transform: rotate(-90deg); animation: sp-draw 1.3s cubic-bezier(0.65, 0, 0.35, 1) 0.15s forwards; }
+@keyframes sp-draw { to { stroke-dashoffset: 0; } }
+.sp-core { fill: var(--a1); transform-origin: 50% 50%; transform: scale(0); animation: sp-pop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.9s forwards; }
+@keyframes sp-pop { to { transform: scale(1); } }
+.sp-word { display: flex; font-weight: 700; font-size: 1.5rem; letter-spacing: -.025em; }
+.sp-word span, .sp-tag, .sp-sub, .sp-foot { opacity: 0; transform: translateY(10px); animation: sp-rise 0.65s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+.sp-word span { animation: sp-rise .25s ease both; }
+.sp-tag { margin: 14px 0 0; font-size: 1.02rem; font-weight: 600; animation-delay: 2.1s; }
+.sp-sub { margin: 6px 0 0; font-size: 0.86rem; color: var(--muted); animation-delay: 2.5s; }
+.sp-foot { position: absolute; bottom: calc(0px + 22px); margin: 0; font-size: 0.74rem; color: var(--faint); animation-delay: 2.5s; }
+@keyframes sp-rise { to { opacity: 1; transform: none; } }
+.sp-bar { position: absolute; bottom: calc(0px + 62px); width: 120px; height: 3px; border-radius: 3px; overflow: hidden; background: color-mix(in srgb, var(--text) 12%, transparent); opacity: 0; animation: sp-fade 0.3s ease 1.2s forwards; }
+.sp-bar i { display: block; height: 100%; background: var(--a1); transform: scaleX(0); transform-origin: left; animation: sp-fill 1.8s cubic-bezier(0.4, 0, 0.2, 1) 1.2s forwards; }
+@keyframes sp-fade { to { opacity: 1; } } @keyframes sp-fill { to { transform: scaleX(1); } }
+.sp-ring { animation: sp-draw .35s ease forwards; }
+.sp-core { animation: sp-pop .25s ease .1s forwards; }
+.sp-tag, .sp-sub, .sp-foot { animation: none; opacity: 1; transform: none; }
+.sp-bar { display: none; }
+html[data-splash="off"] .splash { display: none; }
+@media (prefers-reduced-motion: reduce) {
+  .splash { display: none; } .sp-center, .sp-mark { animation: none; }
+  .sp-ring { stroke-dashoffset: 0; animation: none; } .sp-core { transform: none; animation: none; }
+  .sp-word span, .sp-tag, .sp-sub, .sp-foot { opacity: 1; transform: none; animation: none; } .sp-bar { display: none; }
+}
+html[data-motion="off"] .splash { display: none; } html[data-motion="off"] .sp-center, html[data-motion="off"] .sp-mark { animation: none; }
+html[data-motion="off"] .sp-ring { stroke-dashoffset: 0; animation: none; } html[data-motion="off"] .sp-core { transform: none; animation: none; }
+html[data-motion="off"] .sp-word span, html[data-motion="off"] .sp-tag, html[data-motion="off"] .sp-sub, html[data-motion="off"] .sp-foot { opacity: 1; transform: none; animation: none; } html[data-motion="off"] .sp-bar { display: none; }
+</style>
+</head>
+<body>
+<div class="splash" id="splash" aria-hidden="true">
+  <div class="sp-center">
+    <svg class="sp-mark" viewBox="0 0 80 80" width="92" height="92" focusable="false"><circle class="sp-ring" cx="40" cy="40" r="32" pathLength="100"/><circle class="sp-core" cx="40" cy="40" r="10"/></svg>
+    <div class="sp-word"><span>AccessFromPhone</span></div>
+    <p class="sp-tag">Your PC, from your pocket.</p>
+    <p class="sp-sub">Ask in plain words. You approve every change.</p>
+  </div>
+  <div class="sp-bar"><i></i></div>
+  <p class="sp-foot">Your PC. Your permissions.</p>
+</div>
+<div class="bg" aria-hidden="true"><i class="blob b1"></i><i class="blob b2"></i><i class="blob b3"></i></div>
+<div id="root" class="loading"><svg class="logo" viewBox="0 0 40 40" aria-label="Loading"><use href="#logo"/></svg></div>
+<div class="toasts" id="toasts" role="status" aria-live="polite"></div>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="lg" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#22d3ee"/><stop offset="1" stop-color="#3b82f6"/></linearGradient>
+    <linearGradient id="rg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#22d3ee"/><stop offset="1" stop-color="#3b82f6"/></linearGradient>
+    <symbol id="logo" viewBox="0 0 40 40">
+      <circle class="ring" cx="20" cy="20" r="16" fill="none" stroke="url(#lg)" stroke-width="2.6" stroke-dasharray="70 31" stroke-linecap="round"/>
+      <circle cx="20" cy="20" r="11" fill="none" stroke="rgba(148,178,220,.25)" stroke-width="1"/>
+      <circle class="core" cx="20" cy="20" r="5.2" fill="url(#lg)"/>
+    </symbol>
+  </defs>
+</svg>
+
+<script>
+(function () {
+  "use strict";
+  const root = document.getElementById("root");
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let state = null, pollTimer = null, screenTimer = null, tickTimer = null, known = null, devicesBox = null, pairBox = null, ui = {}, paintedSig = "", via = sessionStorage.getItem("afp_via") || "lan";
+
+  /* ---------- tiny helpers ---------- */
+  function el(tag, attrs, ...kids) {
+    const n = document.createElement(tag);
+    for (const [k, v] of Object.entries(attrs || {})) {
+      if (v === false || v == null) continue;
+      if (k === "class") n.className = v; else if (k === "style") n.style.cssText = v; else if (k.startsWith("on")) n.addEventListener(k.slice(2), v); else n.setAttribute(k, v === true ? "" : v);
+    }
+    for (const kid of kids.flat(Infinity)) if (kid != null && kid !== false) n.append(kid.nodeType ? kid : document.createTextNode(kid));
+    return n;
+  }
+  const ICON = {
+    monitor: '<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/>',
+    phone: '<rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M11 18.5h2"/>',
+    tablet: '<rect x="4.5" y="3" width="15" height="18" rx="2.5"/><path d="M11 18h2"/>',
+    lock: '<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
+    shield: '<path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/>',
+    check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+    user: '<circle cx="12" cy="8" r="3.6"/><path d="M5 20c0-3.6 3.1-6 7-6s7 2.4 7 6"/>',
+    eye: '<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+    folder: '<path d="M3 7a2 2 0 0 1 2-2h4l2 2.5h8a2 2 0 0 1 2 2V18a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
+    share: '<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 10.5l6.8-4M8.6 13.5l6.8 4"/>',
+    users: '<circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17" cy="9" r="2.4"/><path d="M17 14.5c2.2 0 4 1.8 4 4"/>',
+    eyeoff: '<path d="M3 3l18 18M10.6 5.2A10 10 0 0 1 12 5c6.4 0 10 7 10 7a17 17 0 0 1-3.2 4M6.5 6.7C3.9 8.5 2 12 2 12s3.6 7 10 7c1.6 0 3-.4 4.3-1M9.9 9.9a3 3 0 0 0 4.2 4.2"/>',
+    copy: '<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h8"/>',
+    refresh: '<path d="M20 11a8 8 0 0 0-14.5-4M4 4v4h4M4 13a8 8 0 0 0 14.5 4M20 20v-4h-4"/>',
+    pencil: '<path d="M4 20l1-4L16.5 4.5a2 2 0 0 1 3 3L8 19z"/>',
+    ban: '<circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/>',
+    trash: '<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>',
+    out: '<path d="M10 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4M15 8l4 4-4 4M19 12H9"/>',
+    wifi: '<path d="M2.5 9a15 15 0 0 1 19 0M5.5 12.5a10.5 10.5 0 0 1 13 0M8.6 16a6 6 0 0 1 6.8 0"/><circle cx="12" cy="19" r="1"/>',
+    key: '<circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M16 7l3 3"/>',
+    globe: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.2 3 14.8 0 18M12 3c-3 3.2-3 14.8 0 18"/>',
+    home: '<path d="M3 11l9-8 9 8"/><path d="M5 10v10h5v-6h4v6h5V10"/>',
+    activity: '<path d="M3 12h4l3-8 4 16 3-8h4"/>',
+    gear: '<circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1.3l2-1.5-2-3.4-2.3 1a7 7 0 0 0-2.2-1.3L14 3h-4l-.4 2.5a7 7 0 0 0-2.2 1.3l-2.3-1-2 3.4 2 1.5A7 7 0 0 0 5 12c0 .4 0 .9.1 1.3l-2 1.5 2 3.4 2.3-1a7 7 0 0 0 2.2 1.3L10 21h4l.4-2.5a7 7 0 0 0 2.2-1.3l2.3 1 2-3.4-2-1.5c.1-.4.1-.9.1-1.3z"/>',
+    plus: '<path d="M12 5v14M5 12h14"/>',
+    chevron: '<path d="m9 6 6 6-6 6"/>',
+    power: '<path d="M12 3v8"/><path d="M6.3 6.8a8 8 0 1 0 11.4 0"/>'
+  };
+  const SVGNS = "http://www.w3.org/2000/svg";
+  function ico(name, cls) { const s = document.createElementNS(SVGNS, "svg"); s.setAttribute("viewBox", "0 0 24 24"); s.setAttribute("class", cls || "ico"); s.setAttribute("aria-hidden", "true"); s.innerHTML = ICON[name] || ""; return s; }
+  function logo() { const s = document.createElementNS(SVGNS, "svg"); s.setAttribute("class", "logo"); s.setAttribute("viewBox", "0 0 40 40"); s.innerHTML = '<use href="#logo"/>'; return s; }
+  function brand() { return el("div", { class: "brand" }, logo(), el("span", { class: "wordmark" }, "AccessFromPhone")); }
+
+  async function call(path, method, body) {
+    const res = await fetch(path, { method: method || "GET", headers: { "X-Admin": "1", "Content-Type": "application/json" }, body: body ? JSON.stringify(body) : undefined });
+    let data = null; try { data = await res.json(); } catch (e) { /* no body */ }
+    if (!res.ok) { const e = new Error((data && data.detail) || res.statusText); e.status = res.status; throw e; }
+    return data;
+  }
+  function clearTimers() { clearInterval(pollTimer); clearInterval(tickTimer); clearInterval(screenTimer); pollTimer = tickTimer = screenTimer = null; }
+  function show(node) { clearTimers(); root.className = ""; root.replaceChildren(node); }
+  const ago = (iso) => { const d = new Date(iso); if (isNaN(d)) return ""; const s = (Date.now() - d) / 1000; return s < 90 ? "Active now" : s < 3600 ? Math.round(s / 60) + " min ago" : s < 86400 ? Math.round(s / 3600) + " h ago" : d.toLocaleDateString(); };
+  const isLive = (iso) => (Date.now() - new Date(iso)) < 90000;
+  const kindOf = (name) => /ipad|tablet/i.test(name) ? "tablet" : /windows|\bpc\b|mac|laptop|desktop/i.test(name) ? "monitor" : "phone";
+
+  /* ---------- toast + modal ---------- */
+  function toast(title, text, kind) {
+    const t = el("div", { class: "toast " + (kind || "") }, el("div", { class: "tick" }, ico("check")), el("div", {}, el("b", {}, title), text ? el("span", {}, text) : null));
+    document.getElementById("toasts").append(t);
+    setTimeout(() => { t.classList.add("out"); setTimeout(() => t.remove(), 380); }, 4200);
+  }
+  function ask({ title, text, input, value, ok, danger }) {
+    return new Promise((done) => {
+      const opener = document.activeElement;
+      const field = input ? el("input", { type: "text", value: value || "", maxlength: "40", "aria-label": title }) : null;
+      const close = (v) => { scrim.remove(); document.removeEventListener("keydown", onKey); if (opener && opener.isConnected) opener.focus({ preventScroll: true }); done(v); };
+      const go = el("button", { class: "btn " + (danger ? "danger" : "primary"), onclick: () => close(input ? field.value.trim() : true) }, ok || "OK");
+      const scrim = el("div", { class: "scrim", onclick: (e) => { if (e.target === scrim) close(null); } },
+        el("div", { class: "modal", role: "dialog", "aria-modal": "true", "aria-label": title }, el("h3", {}, title), text ? el("p", {}, text) : null, field,
+          el("div", { class: "row" }, el("button", { class: "btn ghost", onclick: () => close(null) }, "Cancel"), go)));
+      const onKey = (e) => {
+        if (e.key === "Escape") { e.preventDefault(); close(null); }
+        if (e.key === "Enter" && input && e.target === field) { e.preventDefault(); go.click(); }
+        if (e.key === "Tab") {
+          const controls = [...scrim.querySelectorAll("input, button")], first = controls[0], last = controls[controls.length - 1];
+          if (!scrim.contains(document.activeElement) || (e.shiftKey && document.activeElement === first) || (!e.shiftKey && document.activeElement === last)) {
+            e.preventDefault(); (e.shiftKey ? last : first).focus();
+          }
+        }
+      };
+      document.addEventListener("keydown", onKey);
+      document.body.append(scrim);
+      (field || go).focus(); if (field) field.select();
+    });
+  }
+
+  /* ---------- the hero illustration: a PC reaching a phone ---------- */
+  function scene() {
+    const w = el("div", { class: "scene rise", style: "--i:5", "aria-hidden": "true" });
+    w.innerHTML = '<svg viewBox="0 0 520 250" fill="none">' +
+      '<defs><linearGradient id="scr" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0e2a4d"/><stop offset="1" stop-color="#0a1830"/></linearGradient></defs>' +
+      '<ellipse cx="108" cy="224" rx="92" ry="9" fill="rgba(34,211,238,.10)"/>' +
+      '<rect x="22" y="48" width="172" height="118" rx="12" fill="#0b1424" stroke="rgba(148,178,220,.35)" stroke-width="1.5"/>' +
+      '<rect x="31" y="57" width="154" height="100" rx="6" fill="url(#scr)"/>' +
+      '<g class="screen-glow"><rect x="42" y="70" width="64" height="8" rx="4" fill="#22d3ee" opacity=".85"/><rect x="42" y="86" width="104" height="6" rx="3" fill="#3b82f6" opacity=".55"/><rect x="42" y="100" width="88" height="6" rx="3" fill="#3b82f6" opacity=".35"/><rect x="42" y="114" width="112" height="6" rx="3" fill="#3b82f6" opacity=".25"/><circle cx="165" cy="135" r="9" fill="#34d399" opacity=".85"/><path d="M161 135l3 3 5-6" stroke="#04101f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></g>' +
+      '<path d="M96 166h24l5 22H91z" fill="#0b1424" stroke="rgba(148,178,220,.35)" stroke-width="1.5"/><rect x="72" y="188" width="72" height="7" rx="3.5" fill="#0b1424" stroke="rgba(148,178,220,.35)" stroke-width="1.5"/>' +
+      '<path id="route" class="link" d="M205 110 C 270 40, 340 40, 385 100"/>' +
+      '<circle r="5" fill="#22d3ee"><animateMotion dur="2.6s" repeatCount="indefinite"><mpath href="#route"/></animateMotion></circle>' +
+      '<circle r="4" fill="#3b82f6" opacity=".8"><animateMotion dur="2.6s" begin="1.3s" repeatCount="indefinite"><mpath href="#route"/></animateMotion></circle>' +
+      '<g transform="translate(404 62)"><circle class="pulse" cx="38" cy="78" r="46" stroke="#22d3ee" stroke-width="1.5"/><circle class="pulse p2" cx="38" cy="78" r="46" stroke="#22d3ee" stroke-width="1.5"/><circle class="pulse p3" cx="38" cy="78" r="46" stroke="#22d3ee" stroke-width="1.5"/>' +
+      '<rect x="0" y="0" width="76" height="156" rx="16" fill="#0b1424" stroke="rgba(148,178,220,.4)" stroke-width="1.5"/><rect x="6" y="8" width="64" height="140" rx="11" fill="url(#scr)"/><rect x="28" y="12" width="20" height="4" rx="2" fill="#04101f"/>' +
+      '<g class="screen-glow"><circle cx="38" cy="58" r="14" stroke="#22d3ee" stroke-width="2"/><circle cx="38" cy="58" r="5" fill="#22d3ee"/><rect x="16" y="88" width="44" height="6" rx="3" fill="#3b82f6" opacity=".6"/><rect x="22" y="102" width="32" height="6" rx="3" fill="#3b82f6" opacity=".35"/><rect x="14" y="122" width="48" height="16" rx="8" fill="url(#lg)"/></g></g>' +
+      '</svg>';
+    return w;
+  }
+  function split(heading, lead, panel) {
+    const feats = [["lock", "Private by design. Your files never leave this PC."], ["shield", "You approve every change, and can undo it."], ["wifi", "Works over your own Wi-Fi. Nothing to install on the phone."]];
+    const stage = el("div", { class: "stage" },
+      el("section", { class: "hero" },
+        el("div", { class: "rise", style: "--i:0" }, brand()),
+        el("h1", { class: "rise", style: "--i:1" }, heading),
+        el("p", { class: "lead rise", style: "--i:2" }, lead),
+        el("ul", { class: "feats" }, feats.map((f, i) => el("li", { class: "rise", style: "--i:" + (3 + i * 0.6) }, ico(f[0]), f[1]))),
+        scene()),
+      el("section", { class: "panel" }, panel));
+    show(stage);
+    if (reduce) stage.querySelectorAll("svg").forEach((s) => s.pauseAnimations && s.pauseAnimations());
+  }
+  const heroH1 = () => { const h = el("span"); h.innerHTML = "Access your PC<br><em>from any device.</em>"; return h; };
+  const heroLead = "Ask your PC to find, read and change files from your phone, then approve what it does. No screen sharing, no cloud copy.";
+
+  /* ---------- forms ---------- */
+  function field(f) {
+    const input = el("input", { type: f.type || "text", name: f.name, autocomplete: f.auto || "off", placeholder: f.hint || "", required: true, minlength: f.min || false, value: f.value || false, spellcheck: "false" });
+    const wrap = el("div", { class: "input" }, ico(f.icon || "user", "lead-ico"), input);
+    if (f.type === "password") {
+      const eye = el("button", { type: "button", class: "eye", "aria-label": "Show password", onclick: () => {
+        const on = input.type === "password"; input.type = on ? "text" : "password"; eye.replaceChildren(ico(on ? "eyeoff" : "eye")); eye.setAttribute("aria-label", on ? "Hide password" : "Show password");
+      } }, ico("eye"));
+      wrap.append(eye);
+    }
+    return { input, node: el("label", { class: "field" }, el("span", {}, f.label), wrap) };
+  }
+  function authCard({ title, sub, fields, button, onSubmit, aside, below }) {
+    const fs = fields.map(field);
+    const err = el("p", { class: "err", role: "alert" });
+    const label = el("span", {}, button);
+    const go = el("button", { class: "btn primary", type: "submit" }, label);
+    const form = el("form", { onsubmit: async (e) => {
+      e.preventDefault(); err.textContent = ""; err.classList.remove("show"); go.disabled = true; label.replaceChildren(el("i", { class: "spinner" }));
+      try { await onSubmit(Object.fromEntries(fields.map((x, i) => [x.name, fs[i].input.value]))); }
+      catch (ex) { err.textContent = ex.message; void err.offsetWidth; err.classList.add("show"); go.disabled = false; label.textContent = button; }
+    } }, fs.map((f) => f.node), err, go);
+    const card = el("div", { class: "card auth rise", style: "--i:2" }, el("h2", {}, title), el("p", { class: "sub" }, sub), form, aside ? el("div", { class: "aside" }, ico("shield"), el("span", {}, aside)) : null, below);
+    return { card, focus: () => (fs.find((f) => !f.input.value) || fs[0]).input.focus() };
+  }
+
+  async function load() {
+    try { state = await call("/admin/state"); } catch (e) { show(el("div", { class: "loading" }, el("p", { class: "err show" }, "Can't reach the app on this PC. Is it running?"))); return; }
+    if (state.setup_needed) return setupView();
+    if (!state.signed_in) return loginView();
+    return dashboard();
+  }
+
+  function setupView() {
+    const a = authCard({ title: "Set up this PC", sub: "Create the owner account. You'll sign in here, and phones join by scanning a code.",
+      fields: [{ name: "name", label: "Your name", auto: "name", icon: "user" }, { name: "password", label: "Password (8+ characters)", type: "password", auto: "new-password", min: 8, icon: "lock" },
+               { name: "again", label: "Type it again", type: "password", auto: "new-password", icon: "lock" }],
+      button: "Create account",
+      onSubmit: async (v) => { if (v.password !== v.again) throw new Error("The two passwords are not the same."); const r = await call("/admin/setup", "POST", { name: v.name, password: v.password }); recoveryView(r.recovery_code); } });
+    split(heroH1(), heroLead, a.card); a.focus();
+  }
+
+  function recoveryView(code) {
+    const ok = el("input", { type: "checkbox", id: "saved" });
+    const go = el("button", { class: "btn primary", disabled: true, onclick: load }, "Continue");
+    ok.addEventListener("change", () => { go.disabled = !ok.checked; });
+    const copy = el("button", { class: "btn sm", type: "button", onclick: async () => { try { await navigator.clipboard.writeText(code); toast("Copied", "Keep it somewhere safe.", ""); } catch (e) { toast("Select the code and copy it", "", "warn"); } } }, ico("copy"), "Copy code");
+    const card = el("div", { class: "card auth rise", style: "--i:1" }, el("h2", {}, "Save your recovery code"),
+      el("p", { class: "sub" }, "If you forget the password, this is the only way back in. It is shown once."),
+      el("div", { class: "recovery" }, code.split("-").map((g) => el("b", {}, g))), copy,
+      el("label", { class: "check", for: "saved" }, ok, "I have saved it somewhere safe"), go);
+    split(heroH1(), heroLead, card);
+  }
+
+  function loginView() {
+    const windows = state.mode === "windows";
+    const a = authCard(windows
+      ? { title: "Welcome back", sub: "Sign in with the user name and password you use for Windows on " + state.pc + ". Nothing new to create.",
+          fields: [{ name: "username", label: "Windows user name", auto: "username", value: state.windows_user, icon: "user" }, { name: "password", label: "Windows password", type: "password", auto: "current-password", icon: "key" }],
+          button: "Sign in", aside: "A PIN, fingerprint or face sign-in won't work here. Type the account password.",
+          onSubmit: async (v) => { await call("/admin/login", "POST", { username: v.username, password: v.password }); load(); } }
+      : { title: "Welcome back", sub: "Sign in to manage " + state.pc + ".", fields: [{ name: "password", label: "Password", type: "password", auto: "current-password", icon: "lock" }], button: "Sign in",
+          onSubmit: async (v) => { await call("/admin/login", "POST", { password: v.password }); load(); },
+          below: el("p", { class: "aside" }, el("button", { class: "linkbtn", type: "button", onclick: resetView }, "Forgot the password?")) });
+    split(heroH1(), heroLead, a.card); a.focus();
+  }
+
+  function resetView() {
+    const a = authCard({ title: "Reset the password", sub: "Enter the recovery code you saved when you set up this PC.",
+      fields: [{ name: "recovery_code", label: "Recovery code", icon: "key" }, { name: "new_password", label: "New password (8+ characters)", type: "password", auto: "new-password", min: 8, icon: "lock" }],
+      button: "Reset password", onSubmit: async (v) => { const r = await call("/admin/reset", "POST", v); recoveryView(r.recovery_code); },
+      below: el("p", { class: "aside" }, el("button", { class: "linkbtn", type: "button", onclick: loginView }, "Back to sign in")) });
+    split(heroH1(), heroLead, a.card); a.focus();
+  }
+
+    /* ---------- dashboard: a menu on the left, one section at a time ---------- */
+  const VIEWS = [["overview", "Overview", "home"], ["phones", "Phones", "phone"], ["unlock", "Unlock", "lock"], ["connection", "Connection", "globe"], ["activity", "Activity", "activity"], ["settings", "Settings", "gear"]];
+  const greeting = () => { const h = new Date().getHours(); return h < 5 ? "Good night" : h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening"; };
+  const fmtBytes = (b) => b >= 1024 ** 4 ? (b / 1024 ** 4).toFixed(1) + " TB" : b >= 1024 ** 3 ? (b / 1024 ** 3).toFixed(b >= 1024 ** 3 * 100 ? 0 : 1) + " GB" : Math.round(b / 1024 ** 2) + " MB";
+  const toneOf = (pct, warnAt, badAt) => pct >= badAt ? "bad" : pct >= warnAt ? "warn" : "ok";
+
+  function dashboard() {
+    known = null; paintedSig = "";
+    const saved = sessionStorage.getItem("afp_adm_view");
+    ui = { view: VIEWS.some((v) => v[0] === saved) ? saved : "overview", devices: [], status: null, activity: [], unlock: null, conn: null, pause: null, rendered: false };
+    pairBox = el("section", { class: "card connect" });
+    ui.pairMini = el("section", { class: "card mini-pair" });
+    devicesBox = el("div", { class: "devices" });
+    ui.accessBox = el("section", { class: "card dcard" });
+    ui.screenBox = el("section", { class: "card dcard" });
+    ui.unlockBox = el("section", { class: "card conn" });
+    ui.connBox = el("section", { class: "card conn" });
+    ui.online = el("span", { class: "chip" }, el("i", { class: "dot" }), el("span", {}, state.pc + " · Online"));
+    ui.nav = VIEWS.map(([key, label, icon]) => el("button", { class: "rnav", type: "button", "data-view": key, onclick: () => setView(key) }, ico(icon), el("span", {}, label)));
+    const rail = el("aside", { class: "rail" }, brand(), el("nav", { class: "rnavs", "aria-label": "Sections" }, ui.nav),
+      el("div", { class: "who" }, el("span", { class: "avatar" }, (state.owner || "?").slice(0, 1).toUpperCase()), el("div", { class: "grow" }, el("b", {}, state.owner || "Owner"), el("small", {}, "Owner · signed in")),
+        el("button", { class: "btn sm ghost", title: "Sign out", "aria-label": "Sign out", onclick: async () => { await call("/admin/logout", "POST"); load(); } }, ico("out"))));
+    ui.main = el("main", { class: "dmain" });
+    show(el("div", { class: "shell" }, rail, ui.main));
+    via = "lan"; sessionStorage.setItem("afp_via", via);
+    setView(ui.view);
+    pairing(); devices(); loadConnection(); loadUnlock(); loadStatus(); loadActivity(); loadPause(); loadAccess(); loadScreen();
+    pollTimer = setInterval(() => { devices(); loadStatus(); loadActivity(); loadUnlock(); loadPause(); loadAccess(); }, 4000);
+    screenTimer = setInterval(loadScreen, 1500);  // a phone asking to see the screen is answered here as quickly as it can be
+  }
+
+  function setView(key) {
+    ui.view = key; sessionStorage.setItem("afp_adm_view", key);
+    ui.nav.forEach((b) => { const on = b.dataset.view === key; b.classList.toggle("on", on); if (on) b.setAttribute("aria-current", "page"); else b.removeAttribute("aria-current"); });
+    paintView();
+    ui.main.classList.remove("enter");
+    requestAnimationFrame(() => ui.main.classList.add("enter"));
+    window.scrollTo(0, 0);
+  }
+
+  async function loadStatus() {
+    try { ui.status = await call("/admin/status"); } catch (e) { if (e.status === 401) { clearTimers(); load(); } return; }
+    paintStatus();
+  }
+  async function loadPause() {
+    let p;
+    try { p = await call("/admin/pause"); } catch (e) { if (e.status === 401) { clearTimers(); load(); } return; }
+    if (JSON.stringify(p) === JSON.stringify(ui.pause)) return;
+    ui.pause = p;
+    if (ui.view === "overview") paintView();
+  }
+  async function setPause(on) {
+    try { ui.pause = await call(on ? "/admin/pause/start" : "/admin/pause/resume", "POST"); toast(on ? "Phone access paused" : "Phones can reach this PC again", on ? "No phone can reach this PC until you resume it here." : "", on ? "warn" : ""); }
+    catch (e) { toast("That didn't work", e.message, "warn"); }
+    paintView();
+  }
+  /* Screen viewing: only here (or on the little window on this PC's desktop) does anyone say yes, and the Owner can stop it at once. */
+  async function loadScreen() {
+    let a;
+    try { a = await call("/admin/screen"); } catch (e) { if (e.status === 401) { clearTimers(); load(); } return; }
+    if (JSON.stringify(a) === JSON.stringify(ui.screen)) return;
+    ui.screen = a;
+    if (ui.view === "phones") paintScreen();
+  }
+  async function screenAct(path, body, done) {
+    try { ui.screen = await call(path, "POST", body); if (done) toast(done, "", ""); }
+    catch (e) { toast("That didn't work", e.message, "warn"); loadScreen(); }
+    paintScreen();
+  }
+  function paintScreen() {
+    const a = ui.screen, box = ui.screenBox;
+    if (!box) return;
+    const head = el("h2", {}, ico("eye"), "Screen viewing", a && a.viewing ? el("span", { class: "tag bad live" }, "Someone is looking") : a && a.pending.length ? el("span", { class: "tag" }, "Waiting for you") : null);
+    if (!a) { box.replaceChildren(head, el("p", { class: "meta" }, "Loading…")); return; }
+    if (!a.enabled) { box.replaceChildren(head, el("p", { class: "meta" }, "Switched off in config.yaml (screen.enabled). No phone can see this PC's screen.")); return; }
+    const parts = [head, el("p", { class: "meta" }, "A phone can look at this PC's screen, view only, once you say yes here. A banner stays on this PC while it looks, and you can stop it any time." + (a.panic ? " " + a.panic.replace(/ stops this at once\./, " cuts looking and control at once, from this PC's keyboard.") : ""))];
+    if (a.viewing) parts.push(el("div", { class: "dev" }, el("span", { class: "dico" }, ico("eye")), el("div", { class: "grow" }, el("b", {}, a.viewing.name + " is looking at this PC's screen"), el("small", {}, "For " + (a.viewing.since < 60 ? "less than a minute" : Math.round(a.viewing.since / 60) + " minutes") + (a.viewing.controlling ? " · controlling the mouse and keyboard" : " · looking only") + (a.viewing.listening ? " · listening to this PC's sound" : ""))),
+      el("button", { class: "btn sm", onclick: () => screenAct("/admin/screen/stop", null, "Stopped") }, "Stop now")));
+    a.pending.forEach((r) => parts.push(el("div", { class: "person" }, el("div", { class: "grow" }, el("b", {}, r.name + (r.kind === "control" ? " wants to CONTROL this PC (mouse and keyboard)" : " wants to see this PC's screen")), el("small", {}, r.note ? "“" + r.note + "”" : "Waiting " + r.waiting + " s")),
+      el("button", { class: "btn sm primary", onclick: () => screenAct("/admin/screen/decide", { device_id: r.device_id, allow: true, minutes: 15, kind: r.kind }, "Allowed for 15 minutes") }, "Allow 15 min"),
+      el("button", { class: "btn sm", onclick: () => screenAct("/admin/screen/decide", { device_id: r.device_id, allow: true, minutes: 60, kind: r.kind }, "Allowed for 1 hour") }, "Allow 1 hour"),
+      el("button", { class: "btn sm ghost", onclick: () => screenAct("/admin/screen/decide", { device_id: r.device_id, allow: false, kind: r.kind }, "Denied") }, "Deny"))));
+    const granted = new Map(a.grants.map((g) => [g.device_id, g]));
+    const people = (ui.devices || []).filter((d) => !d.blocked);
+    const mins = ui.grantMins == null ? 60 : ui.grantMins;
+    const lenText = mins === 0 ? "until you take it back" : mins === 15 ? "for 15 minutes" : "for 1 hour";
+    const chooser = people.some((d) => d.id !== a.admin_id && !granted.has(d.id))
+      ? el("div", { class: "pchoose" }, el("span", {}, "Allow for"),
+          el("div", { class: "seg", role: "radiogroup", "aria-label": "How long to allow" },
+            ...[[15, "15 min"], [60, "1 hour"], [0, "Until I stop it"]].map(([m, t]) => el("button", { class: "seg-b" + (mins === m ? " on" : ""), type: "button", role: "radio", "aria-checked": String(mins === m), onclick: () => { ui.grantMins = m; paintScreen(); } }, t))))
+      : null;
+    if (chooser) parts.push(chooser);
+    const tile = (d, tone, status, extra, actions) => el("div", { class: "prow" }, el("span", { class: "dico" }, ico(kindOf(d.name))),
+      el("div", { class: "grow" }, el("b", {}, d.name), el("small", { class: "pstat " + tone }, el("i", { class: "sdot" }), status), extra || null),
+      el("div", { class: "pact" }, ...actions));
+    people.forEach((d) => {
+      const g = granted.get(d.id);
+      if (d.id === a.admin_id) { parts.push(tile(d, "ok", "Admin phone: may look without asking", el("small", { class: "phint" }, "The banner and Stop still show on this PC."), [el("span", { class: "tag ok" }, "Automatic")])); return; }
+      if (g) {
+        const left = g.left == null ? "until you take it back" : "for " + Math.max(1, Math.round(g.left / 60)) + " more min";
+        parts.push(tile(d, "ok", "Allowed " + left, el("small", { class: "phint" }, g.control ? "Can look, and control the mouse and keyboard." : "View only: can look, cannot touch."),
+          [el("button", { class: "btn sm danger", onclick: () => screenAct("/admin/screen/revoke", { device_id: d.id }, d.name + ": taken back") }, "Take back")]));
+        return;
+      }
+      parts.push(tile(d, "off", "Not allowed", null, [
+        el("button", { class: "btn sm primary", title: "Look at the screen " + lenText + ". No mouse or keyboard.", onclick: () => screenAct("/admin/screen/grant", { device_id: d.id, minutes: mins }, d.name + ": allowed to look " + lenText) }, ico("eye"), "Look only"),
+        el("button", { class: "btn sm", title: "Look and use the mouse and keyboard " + lenText + ".", onclick: () => screenAct("/admin/screen/grant", { device_id: d.id, minutes: mins, control: true }, d.name + ": allowed to look and control " + lenText) }, "Look and control")]));
+    });
+    box.replaceChildren(...parts.flat());
+  }
+
+  /* Who can do what: the Owner (here, on this PC) picks the Admin phone and each phone's level, and can end whoever is using the PC. */
+  async function loadAccess() {
+    let a;
+    try { a = await call("/admin/access"); } catch (e) { if (e.status === 401) { clearTimers(); load(); } return; }
+    if (JSON.stringify(a) === JSON.stringify(ui.access)) return;
+    ui.access = a;
+    if (ui.view === "phones") paintAccess();
+  }
+  async function accessAct(path, body, done) {
+    try { ui.access = await call(path, "POST", body); if (done) toast(done, "", ""); }
+    catch (e) { toast("That didn't work", e.message, "warn"); }
+    paintAccess();
+  }
+  function paintAccess() {
+    const a = ui.access, box = ui.accessBox;
+    if (!box) return;
+    if (!a || !a.enabled) { box.replaceChildren(el("h2", {}, ico("shield"), "Who can do what"), el("p", { class: "meta" }, a ? "Switched off in config.yaml (access.enabled). Every paired phone can act at any time." : "Loading…")); return; }
+    const s = a.session, holder = s && s.holder;
+    const turn = holder
+      ? el("div", { class: "dev" }, el("span", { class: "dico" }, ico("phone")), el("div", { class: "grow" }, el("b", {}, holder.name + " is using this PC"), el("small", {}, "Level: " + holder.level + (s.ask ? " · " + s.ask.name + " is asking for a turn" : ""))),
+          el("button", { class: "btn sm", onclick: () => accessAct("/admin/session/end", null, "Their turn ended") }, "End their turn"))
+      : el("p", { class: "meta" }, "Nobody is using this PC right now.");
+    const rows = a.people.filter((p) => !p.blocked).map((p) => {
+      const levels = el("div", { class: "seg", role: "radiogroup", "aria-label": "Access level for " + p.name },
+        ...a.levels.map((l) => el("button", { class: "seg-b" + (p.level === l.id ? " on" : ""), type: "button", role: "radio", "aria-checked": String(p.level === l.id), onclick: () => p.level !== l.id && accessAct("/admin/access/level", { device_id: p.id, level: l.id }, p.name + ": " + l.name) }, l.id === "viewer" ? "View" : l.id === "editor" ? "Edit" : "Operate")));
+      const admin = p.role === "admin";
+      const hints = { viewer: "View: can look and read only.", editor: "Edit: can also change files.", operator: "Operate: can also run approved commands and open apps." };
+      return el("div", { class: "prow" }, el("span", { class: "dico" }, ico("phone")),
+        el("div", { class: "grow" }, el("b", {}, p.name, admin ? el("span", { class: "tag ok", style: "margin-left:8px" }, "Admin") : null),
+          el("small", { class: "pstat " + (admin ? "ok" : "off") }, el("i", { class: "sdot" }), admin ? "Manages access from their phone" : "Level: " + p.level),
+          el("small", { class: "phint" }, admin ? "Admin can use every level. Unlocking and restarting are for the Admin only." : hints[p.level] || "")),
+        el("div", { class: "pact" }, admin ? null : levels,
+          admin ? el("button", { class: "btn sm ghost", onclick: () => accessAct("/admin/access/admin", { device_id: null }, "No Admin phone now") }, "Remove Admin")
+                : el("button", { class: "btn sm ghost", title: "Make this the phone that manages access", onclick: () => accessAct("/admin/access/admin", { device_id: p.id }, p.name + " is now the Admin") }, "Make Admin")));
+    });
+    box.replaceChildren(el("h2", {}, ico("shield"), "Who can do what"),
+      el("p", { class: "meta" }, "One person uses this PC at a time. The Admin phone (yours) can approve requests and set levels up to Operate from the phone. Only here can you choose the Admin or resume after Pause."),
+      turn, ...(rows.length ? rows : [el("p", { class: "meta" }, "No phone is paired yet.")]));
+  }
+
+  async function loadActivity() {
+    let list;
+    try { list = await call("/admin/activity"); } catch (e) { if (e.status === 401) { clearTimers(); load(); } return; }
+    if (JSON.stringify(list) === JSON.stringify(ui.activity)) return;
+    ui.activity = list;
+    if (ui.view === "overview" || ui.view === "activity") paintView();
+  }
+
+  /* the four readings update in place, so they never flicker */
+  function paintStatus() {
+    const d = ui.status;
+    if (!d || !d.available) return;
+    const set = (key, value, pct, tn) => { const t = ui.main.querySelector('[data-k="' + key + '"]'); if (!t) return; t.querySelector("strong").textContent = value; const i = t.querySelector(".bar i"); i.style.width = Math.max(2, Math.min(100, pct)) + "%"; i.dataset.tone = tn; };
+    set("cpu", d.cpu_percent + "%", d.cpu_percent, toneOf(d.cpu_percent, 70, 90));
+    set("mem", d.memory.percent + "%", d.memory.percent, toneOf(d.memory.percent, 80, 92));
+    if (d.disk) set("disk", fmtBytes(d.disk.free), d.disk.percent, toneOf(d.disk.percent, 85, 95));
+    const b = d.battery;
+    set("bat", b ? b.percent + "%" + (b.plugged ? " · plugged in" : "") : "Mains power", b ? b.percent : 100, !b || b.plugged ? "ok" : b.percent <= 20 ? "bad" : b.percent <= 40 ? "warn" : "ok");
+  }
+
+  function dtile(key, label) { return el("div", { class: "dtile", "data-k": key }, el("small", {}, label), el("strong", {}, "…"), el("div", { class: "bar" }, el("i", { style: "width:2%" }))); }
+  function dhead(title, sub, extra) { return el("header", { class: "dhead" }, el("div", { class: "grow" }, el("span", { class: "eyebrow" }, "Your control center"), el("h1", {}, title), sub ? el("p", {}, sub) : null), extra || null, ui.online); }
+  function dcard(icon, title, chip, ...kids) { return el("section", { class: "card dcard" }, el("h2", {}, ico(icon), title, chip || null), ...kids); }
+  function devRow(d) {
+    const live = isLive(d.last_seen) && !d.blocked;
+    return el("div", { class: "dev" }, el("span", { class: "dico" }, ico(kindOf(d.name))), el("div", { class: "grow" }, el("b", {}, d.name), el("small", {}, ago(d.last_seen) + (d.last_ip ? " · " + d.last_ip : ""))),
+      d.blocked ? el("span", { class: "tag bad" }, "Blocked") : d.signed_out ? el("span", { class: "tag" }, "Signed out") : el("span", { class: "tag ok" + (live ? " live" : "") }, live ? "Online" : "Allowed"));
+  }
+  function actRow(a) { return el("div", { class: "act" + (a.tone === "bad" ? " bad" : a.tone === "warn" ? " warn" : "") }, el("span", { class: "adot" }), el("div", { class: "grow" }, el("b", {}, a.text)), el("time", {}, ago(a.time))); }
+
+  function paintView() {
+    const v = ui.view, windows = state.mode === "windows", list = ui.devices, u = ui.unlock;
+    const first = (state.owner || "there").split(/[\s\\]/)[0], live = list.filter((d) => isLive(d.last_seen) && !d.blocked).length;
+    const parts = [];
+    if (v === "overview") {
+      const sub = state.pc + " is online · " + list.length + (list.length === 1 ? " phone" : " phones") + " paired" + (live ? " · " + live + " online now" : "");
+      parts.push(dhead(greeting() + ", " + first, sub));
+      const pz = ui.pause && ui.pause.paused;
+      if (pz) parts.push(el("section", { class: "card dcard", style: "border-color:var(--bad,#f87171)" }, el("h2", {}, ico("shield"), "Phone access is paused", el("span", { class: "tag bad" }, "Paused")),
+        el("p", { class: "meta" }, (ui.pause.by ? ui.pause.by + " paused it. " : "") + "No phone can reach this PC until you resume it here. Nothing was deleted or undone."),
+        el("div", { class: "foot-actions" }, el("button", { class: "btn sm primary", onclick: () => setPause(false) }, "Resume phone access"))));
+      parts.push(el("div", { class: "dtiles" }, dtile("cpu", "Processor"), dtile("mem", "Memory"), dtile("disk", "Disk free"), dtile("bat", "Battery")));
+      const phones = dcard("phone", "Your phones", list.length ? el("span", { class: "tag ok" }, live + " online") : null,
+        ...(list.length ? list.slice(0, 3).map(devRow) : [el("p", { class: "meta" }, "No phone yet. Scan the code on the right with your phone's camera.")]),
+        el("div", { class: "foot-actions" }, el("button", { class: "btn sm", onclick: () => setView("phones") }, "Manage phones", ico("chevron"))));
+      const unlockState = !u || !u.running || !u.configured ? ["Not set up", ""] : u.attention ? ["Stopped", "bad"] : !u.enabled ? ["Off", ""] : ["On", "ok live"];
+      const unlockCard = dcard("lock", "Unlock from phone", el("span", { class: "tag " + unlockState[1] }, unlockState[0]),
+        el("p", { class: "meta" }, !u || !u.running || !u.configured ? "Write “unlock my PC” on your phone while this PC is locked. Set it up once, here, in a minute." : u.attention ? (u.auto_resume_in ? "It paused after the saved sign-in failed twice, and will start again by itself in about " + Math.max(1, Math.round(u.auto_resume_in / 60)) + " min." : "It stopped after the saved sign-in failed, even after trying again by itself. Open Unlock to start it again.") : u.enabled ? "Saved sign-in: " + (u.kind === "pin" ? "Windows Hello PIN" : "Windows password") + ". " + (u.locked === true ? "This PC is locked right now." : "This PC is unlocked.") : "Switched off."),
+        el("div", { class: "foot-actions" }, el("button", { class: "btn sm" + (!u || !u.configured ? " primary" : ""), onclick: () => setView("unlock") }, !u || !u.configured ? "Set up" : "Manage", ico("chevron"))));
+      const c = ui.conn;
+      const reach = dcard("globe", "How phones reach this PC", null,
+        el("div", { class: "dev" }, el("span", { class: "dico" }, ico("wifi")), el("div", { class: "grow" }, el("b", {}, "Same Wi-Fi"), el("small", {}, c ? c.lan.url : "…")), el("span", { class: "tag ok" }, "Ready")),
+        el("div", { class: "dev" }, el("span", { class: "dico" }, ico("globe")), el("div", { class: "grow" }, el("b", {}, "Anywhere"), el("small", {}, c ? (c.anywhere.active ? c.anywhere.url : "Not set up yet") : "…")), el("span", { class: "tag" + (c && c.anywhere.active ? " ok" : "") }, c && c.anywhere.active ? "On" : "Off")),
+        el("div", { class: "foot-actions" }, el("button", { class: "btn sm", onclick: () => setView("connection") }, "Connection details", ico("chevron"))));
+      const activity = dcard("activity", "Recent activity", null, ...(ui.activity.length ? ui.activity.slice(0, 6).map(actRow) : [el("p", { class: "meta" }, "Nothing has happened yet.")]),
+        el("div", { class: "foot-actions" }, el("button", { class: "btn sm", onclick: () => setView("activity") }, "See all", ico("chevron"))));
+      ui.pairMini.className = "card mini-pair";
+      const pauseCard = pz ? null : dcard("shield", "Pause phone access", el("span", { class: "tag ok" }, "On"),
+        el("p", { class: "meta" }, "One tap shuts every phone out of this PC (a phone can press it too). Only you, here, can turn it back on."),
+        el("div", { class: "foot-actions" }, el("button", { class: "btn sm", onclick: () => setPause(true) }, "Pause now")));
+      parts.push(el("div", { class: "dgrid" }, phones, ui.pairMini, unlockCard, reach, activity, pauseCard));
+    } else if (v === "phones") {
+      parts.push(dhead("Your phones", list.length ? list.length + (list.length === 1 ? " phone is paired with this PC." : " phones are paired with this PC.") : "Connect your first phone below."));
+      parts.push(pairBox, ui.screenBox, ui.accessBox, devicesBox);
+      paintAccess(); paintScreen();
+    } else if (v === "unlock") {
+      parts.push(dhead("Unlock this PC from your phone", "Write “unlock my PC” on your phone while this PC is locked."));
+      parts.push(ui.unlockBox);
+    } else if (v === "connection") {
+      parts.push(dhead("Connection", "How your phones reach this PC."));
+      parts.push(ui.connBox);
+    } else if (v === "activity") {
+      parts.push(dhead("Activity", "The latest things that happened on this PC."));
+      parts.push(el("section", { class: "card dcard" }, ...(ui.activity.length ? ui.activity.map(actRow) : [el("p", { class: "meta" }, "Nothing has happened yet.")])));
+    } else {
+      parts.push(dhead("Settings"));
+      parts.push(el("section", { class: "card dcard" }, el("h2", {}, ico("shield"), "This PC"),
+        el("div", { class: "kv" }, el("span", {}, "PC"), el("b", {}, state.pc)), el("div", { class: "kv" }, el("span", {}, "Sign-in"), el("b", {}, windows ? "Your Windows account" : "An app password")),
+        el("div", { class: "kv" }, el("span", {}, "Link to phones"), el("b", {}, state.https ? "Encrypted (HTTPS)" : "Local network")),
+        el("p", { class: "meta", style: "margin-top:10px" }, "Everything about what the agent may do is set in config.yaml on this PC, never from a phone.")));
+      if (!windows) parts.push(passwordCard());
+      parts.push(el("p", { class: "foot" }, windows ? "You sign in with your Windows password, so there is no separate password to manage here." : "Keep your recovery code safe."));
+    }
+    ui.main.replaceChildren(...parts);
+    if (!ui.rendered) { ui.rendered = true; ui.main.classList.add("enter"); }
+    paintUnlock(); paintConnection(); paintStatus(); paintMini();
+    if (ui.view === "phones") {
+      if (!list.length) devicesBox.replaceChildren(el("div", { class: "card empty", style: "grid-column:1/-1" }, emptyArt(), el("h3", {}, "No phone connected yet"), el("p", {}, "Scan the code above with your phone's camera. It will appear here the moment it connects.")));
+      else devicesBox.replaceChildren(...list.map((d) => deviceCard(d, false, -1)));
+    }
+  }
+
+  /* the compact "connect a phone" card on the overview: the same code as the big one, smaller */
+  function paintMini() {
+    const r = ui.pair;
+    if (!ui.pairMini) return;
+    if (!r) { ui.pairMini.replaceChildren(el("h2", {}, ico("plus"), "Connect a phone"), el("p", { class: "meta" }, "Making a code…")); return; }
+    const qr = el("div", { class: "mini-qr" }); qr.innerHTML = r.svg;
+    ui.miniTimer = el("p", { class: "timer" }, ui.timerText || "");
+    ui.pairMini.replaceChildren(el("h2", {}, ico("plus"), "Connect a phone"), qr, el("div", { class: "mini-code" }, r.code), ui.miniTimer,
+      el("div", { class: "foot-actions" }, el("button", { class: "btn sm", onclick: pairing }, ico("refresh"), "New code"), el("button", { class: "btn sm ghost", onclick: () => setView("phones") }, "More ways")));
+  }
+
+  function passwordCard() {
+    const err = el("p", { class: "err" }), oldP = el("input", { type: "password", autocomplete: "current-password", placeholder: "Current password" }), newP = el("input", { type: "password", autocomplete: "new-password", placeholder: "New password (8+ characters)" });
+    for (const i of [oldP, newP]) i.style.cssText = "height:44px;padding:0 14px;border-radius:12px;border:1px solid var(--line-strong);background:rgba(4,10,20,.6)";
+    return el("details", { class: "card details rise", style: "--i:5" }, el("summary", {}, ico("lock"), "Change password"),
+      el("div", { class: "body" }, oldP, newP, el("button", { class: "btn", onclick: async () => {
+        err.textContent = ""; try { await call("/admin/password", "POST", { old_password: oldP.value, new_password: newP.value }); oldP.value = newP.value = ""; toast("Password changed", "", ""); } catch (e) { err.textContent = e.message; }
+      } }, "Change password"), err));
+  }
+
+  async function pairing() {
+    clearInterval(tickTimer);
+    let r;
+    try { r = await call("/admin/pairing", "POST", { via }); } catch (e) { if (e.status === 401) return load(); if (e.status === 409 && via === "anywhere") { via = "lan"; sessionStorage.setItem("afp_via", via); return pairing(); } pairBox.replaceChildren(el("p", { class: "err show" }, e.message)); return; }
+    const qr = el("div", { class: "qr" }); qr.innerHTML = r.svg; qr.append(el("i", { class: "sweep" }));
+    const ring = '<svg class="ringsvg" viewBox="0 0 100 100" aria-hidden="true"><circle class="track" cx="50" cy="50" r="48" pathLength="100"/><circle class="prog" cx="50" cy="50" r="48" pathLength="100"/></svg>';
+    const box = el("div", { class: "qrbox" }, el("i", { class: "corner tl" }), el("i", { class: "corner tr" }), el("i", { class: "corner bl" }), el("i", { class: "corner br" }), qr);
+    box.insertAdjacentHTML("afterbegin", ring);
+    const prog = box.querySelector(".prog"); prog.style.setProperty("--dur", r.expires_in + "s"); void prog.getBoundingClientRect(); prog.classList.add("run");
+    const left = el("p", { class: "timer" });
+    let secs = r.expires_in;
+    const tick = () => { left.textContent = secs > 0 ? "New code in " + Math.floor(secs / 60) + ":" + String(secs % 60).padStart(2, "0") + " · works once, for one phone" : "Making a new code…"; ui.timerText = left.textContent; if (ui.miniTimer) ui.miniTimer.textContent = ui.timerText; if (secs-- < 0) pairing(); };
+    tick(); tickTimer = setInterval(tick, 1000);
+    const copy = el("button", { class: "btn sm", onclick: async () => { try { await navigator.clipboard.writeText(r.code); toast("Code copied", "", ""); } catch (e) { toast("Select the code and copy it", "", "warn"); } } }, ico("copy"), "Copy");
+    const anywhereOn = via === "anywhere";
+    const tabs = el("div", { class: "tabs", role: "tablist", "aria-label": "Where will the phone be?" },
+      el("button", { class: "tab", role: "tab", "aria-selected": String(!anywhereOn), onclick: () => switchVia("lan") }, ico("wifi"), "Same Wi-Fi"),
+      el("button", { class: "tab", role: "tab", "aria-selected": String(anywhereOn), onclick: () => switchVia("anywhere") }, ico("globe"), "Anywhere"));
+    const steps = anywhereOn
+      ? (ui.conn && ui.conn.anywhere.provider === "relay"
+        ? [el("li", {}, "Scan the code with the phone's camera."), el("li", {}, "Tap the link. It opens your PC's own address on " + ui.conn.anywhere.name + "."), el("li", {}, "Works on any network, with no warning. Nothing to install and nothing to set up on the router.")]
+        : [el("li", {}, "Install Tailscale on the phone and sign in to the same account as this PC."), el("li", {}, "Scan the code, then tap the link your camera shows."), el("li", {}, "No “not private” warning: this address has a real certificate. It works at home and away.")])
+      : [el("li", {}, "Put the phone on the same Wi-Fi as this PC."), el("li", {}, "Scan the code, then tap the link your camera shows."),
+         state.https ? el("li", {}, "First time only: the phone says “not private”. Choose Advanced, then Continue.") : el("li", {}, "The page opens and you're connected.")];
+    const body = el("div", {}, tabs, el("h2", {}, anywhereOn ? "Connect from anywhere" : "Connect a phone"),
+      el("p", { class: "sub" }, anywhereOn ? (ui.conn && ui.conn.anywhere.provider === "relay" ? "This phone will reach your PC from any network, through " + ui.conn.anywhere.name + "." : "This phone will reach your PC over your private Tailscale network, on any connection.") : "Open the camera on your phone and point it at the code. That's it."),
+      el("ol", { class: "steps" }, steps),
+      el("div", { class: "codeline" }, el("span", { class: "code" }, r.code), copy, el("button", { class: "btn sm ghost", onclick: pairing }, ico("refresh"), "New code")), left);
+    pairBox.replaceChildren(box, body);
+    ui.pair = r; paintMini();
+  }
+
+  async function switchVia(to) {
+    if (to === via) return;
+    if (to === "anywhere" && !(ui.conn && ui.conn.anywhere.active)) {
+      // not on yet: try to switch it on; if something is still missing, show what
+      await turnOnAnywhere();
+      if (!(ui.conn && ui.conn.anywhere.active)) { toast("Anywhere isn't ready yet", "Finish the steps in the Connection section.", "warn"); setView("connection"); return; }
+    }
+    via = to; sessionStorage.setItem("afp_via", via); pairing();
+  }
+
+  /* ---------- unlocking this PC from a phone ---------- */
+  async function loadUnlock() {
+    let u;
+    try { u = await call("/admin/unlock"); } catch (e) { if (e.status === 401) { clearTimers(); load(); } return; }
+    const changed = JSON.stringify(u) !== JSON.stringify(ui.unlock);
+    ui.unlock = u; paintUnlock();
+    if (changed && ui.view === "overview") paintView();
+  }
+  let unlockWatch = null;
+  function watchUnlock() {  // after the setup window opens: look every few seconds until it is done (or a few minutes have passed)
+    clearInterval(unlockWatch);
+    let rounds = 0;
+    unlockWatch = setInterval(async () => {
+      rounds += 1;
+      try {
+        const u = await call("/admin/unlock");
+        if (u.running && u.configured) { clearInterval(unlockWatch); ui.unlock = u; paintUnlock(); toast("Unlocking is set up", "Try “unlock my PC” from your phone while the PC is locked.", ""); }
+        else if (rounds > 100) { clearInterval(unlockWatch); loadUnlock(); }
+      } catch (e) { /* the page's own session handling deals with a sign-out */ }
+    }, 3000);
+  }
+  function paintUnlock() {
+    const u = ui.unlock, box = ui.unlockBox;
+    if (!u || !box) return;
+    const on = u.running && u.configured && u.enabled && !u.attention;
+    const tag = !u.running || !u.configured ? el("span", { class: "tag" }, "Not set up") : u.attention ? el("span", { class: "tag bad" }, "Stopped") : u.enabled ? el("span", { class: "tag ok live" }, "On") : el("span", { class: "tag" }, "Off");
+    const lines = [];
+    if (!u.running || !u.configured) {
+      lines.push(el("p", {}, "Write “unlock my PC” on your phone while this PC is locked. You approve it and type your unlock PIN."),
+        el("small", {}, u.setting_up ? "A setup window has opened on this PC. Finish it there (this card updates by itself)." : "Setting it up takes a minute at this PC: Windows asks for permission once, then you choose your unlock PIN. Your Windows Hello PIN is the safer thing to keep: it only works on this one PC."));
+    } else {
+      lines.push(el("p", {}, "Saved sign-in: " + (u.kind === "pin" ? "Windows Hello PIN" : "Windows password") + ". " + (u.locked === true ? "This PC is locked right now." : u.locked === false ? "This PC is unlocked." : "")));
+      if (u.attention) lines.push(el("small", { class: "warnline" }, u.auto_resume_in ? "It paused: typing the saved sign-in didn't unlock the PC twice. It will start again by itself in about " + Math.max(1, Math.round(u.auto_resume_in / 60)) + " min (" + (u.auto_resumes_left == null ? "" : u.auto_resumes_left + " automatic restart" + (u.auto_resumes_left === 1 ? "" : "s") + " left; ") + "or tap Start trying again to go now)." : "It stopped itself: typing the saved sign-in didn't unlock the PC, even after trying again by itself. Make sure the saved sign-in is still your Windows PIN, then tap Start trying again."));
+      else if (!u.enabled) lines.push(el("small", {}, "Switched off. To turn it on again run  python -m handoff.unlock.setup install."));
+      else if (u.locked_for) lines.push(el("small", { class: "warnline" }, "Paused for about " + Math.max(1, Math.round(u.locked_for / 60)) + " more minute(s) after wrong PINs."));
+      else lines.push(el("small", {}, "Three wrong PINs pause it for ten minutes. If typing the sign-in doesn't unlock the PC twice, it stops by itself."));
+    }
+    const setupBtn = !(u.running && u.configured) ? el("div", { class: "row-actions" },
+      el("button", { class: "btn sm primary", disabled: !!u.setting_up, onclick: async () => {
+        try { await call("/admin/unlock/setup", "POST"); ui.unlock.setting_up = true; paintUnlock(); toast("Setup window opened", "Finish it on this PC.", ""); watchUnlock(); }
+        catch (e) { toast("Couldn't open the setup window", e.message, "warn"); }
+      } }, ico("lock"), u.setting_up ? "Setup is open…" : "Set up unlocking")) : null;
+    const actions = setupBtn || (u.running && u.configured ? el("div", { class: "row-actions" },
+      u.attention ? el("button", { class: "btn sm primary", onclick: async () => { try { await call("/admin/unlock/resume", "POST"); toast("It will try again", "", ""); } catch (e) { toast("Couldn't restart it", e.message, "warn"); } loadUnlock(); } }, ico("refresh"), "Start trying again") : null,
+      u.enabled ? el("button", { class: "btn sm", onclick: async () => { try { await call("/admin/unlock/disable", "POST"); toast("Unlocking is off", "", "warn"); } catch (e) { toast("Couldn't switch it off", e.message, "warn"); } loadUnlock(); } }, ico("ban"), "Switch off") : null,
+      !u.enabled ? el("button", { class: "btn sm primary", onclick: async () => { try { await call("/admin/unlock/enable", "POST"); toast("Unlocking is on", "", ""); } catch (e) { toast("Couldn't switch it on", e.message, "warn"); } loadUnlock(); } }, ico("check"), "Switch on") : null,
+      el("button", { class: "btn sm danger", onclick: async () => {
+        const yes = await ask({ title: "Remove the saved sign-in?", text: "The PC forgets your Windows sign-in and unlocking stops working until you set it up again.", ok: "Remove it", danger: true });
+        if (yes) { try { await call("/admin/unlock/forget", "POST"); toast("Saved sign-in removed", "", "warn"); } catch (e) { toast("Couldn't remove it", e.message, "warn"); } loadUnlock(); }
+      } }, ico("trash"), "Remove saved sign-in")) : null);
+    box.replaceChildren(el("div", { class: "section-head", style: "margin-top:0" }, el("h2", {}, "Unlock this PC from your phone"), el("span", {}, "")),
+      el("div", { class: "conn-row col" }, el("div", { class: "conn-head" }, el("div", { class: "conn-ico" }, ico("lock")), el("div", { class: "grow" }, el("h3", {}, "Unlock by asking"), ...lines), tag), actions));
+  }
+
+  /* ---------- how phones reach this PC ---------- */
+  async function loadConnection() {
+    let c;
+    try { c = await call("/admin/connection"); } catch (e) { if (e.status === 401) { clearTimers(); load(); } return; }
+    ui.conn = c; paintConnection();
+    if (ui.view === "overview") paintView();
+  }
+  async function turnOnAnywhere() {
+    try { const a = await call("/admin/connection/anywhere", "POST"); if (ui.conn) ui.conn.anywhere = a; paintConnection(); if (a.active) toast("Anywhere access is on", a.url, ""); } catch (e) { toast("Couldn't check", e.message, "warn"); }
+  }
+  function stepRow(s) {
+    return el("li", { class: "chk" + (s.ok ? " ok" : "") }, el("span", { class: "mark" }, s.ok ? ico("check") : el("i")), el("div", {}, el("b", {}, s.label), s.ok ? null : el("small", {}, s.hint)));
+  }
+  function paintConnection() {
+    const c = ui.conn, box = ui.connBox;
+    if (!c || !box) return;
+    const a = c.anywhere;
+    const wifi = el("div", { class: "conn-row" }, el("div", { class: "conn-ico" }, ico("wifi")), el("div", { class: "grow" },
+      el("h3", {}, "Same Wi-Fi"), el("p", {}, c.lan.url), el("small", {}, state.https ? "Encrypted. Phones show a one-time “not private” notice, because the certificate is made on this PC." : "Plain link on your own network.")),
+      el("span", { class: "tag ok" }, "Ready"));
+    const any = el("div", { class: "conn-row col" },
+      el("div", { class: "conn-head" }, el("div", { class: "conn-ico" }, ico("globe")), el("div", { class: "grow" }, el("h3", {}, "Anywhere"),
+        el("p", {}, a.active ? a.url : a.provider === "relay" ? "Reach this PC from any network through " + a.name + "." : "Reach this PC from any network, with a trusted certificate (no warning)."),
+        el("small", {}, a.provider === "relay" ? "Your PC connects out to the server, so there is nothing to install and nothing to open on your router." : "Uses Tailscale: free, private, and no ports to open on your router.")),
+        a.active ? el("span", { class: "tag ok live" }, "On") : a.enabled ? el("span", { class: "tag" }, "Not set up") : el("span", { class: "tag" }, "Off in config")),
+      a.enabled && !a.active ? el("ul", { class: "checks" }, a.steps.map(stepRow)) : null,
+      a.enabled && !a.active ? el("div", { class: "row-actions" }, el("button", { class: "btn sm primary", onclick: turnOnAnywhere }, ico("refresh"), a.ready ? "Turn on" : "Check again"),
+        a.provider !== "relay" && !a.installed ? el("a", { class: "btn sm", href: "https://tailscale.com/download", target: "_blank", rel: "noopener noreferrer" }, "Get Tailscale") : null) : null,
+      a.error && !a.active ? el("p", { class: "err show" }, a.error) : null);
+    const wake = el("div", { class: "conn-row col" }, el("div", { class: "conn-head" }, el("div", { class: "conn-ico" }, ico("power")), el("div", { class: "grow" },
+      el("h3", {}, "If this PC sleeps"),
+      el("p", {}, c.power.keep_awake ? "It stays awake while this app runs, so your phone can always reach it. The screen can still turn off." : "Keeping awake is off. If the PC sleeps, the phone can't reach it until it wakes."),
+      el("small", {}, "To wake a sleeping PC from afar you need Wake-on-LAN turned on in its BIOS and network adapter, and a router or always-on device to send the wake signal.")),
+      el("span", { class: "tag " + (c.power.keep_awake ? "ok" : "") }, c.power.keep_awake ? "Staying awake" : "May sleep")),
+      el("div", { class: "macline" }, el("span", {}, "This PC's network address (MAC)"), el("code", {}, c.wake.mac), el("button", { class: "btn sm ghost", onclick: async () => { try { await navigator.clipboard.writeText(c.wake.mac); toast("Copied", c.wake.mac, ""); } catch (e) { toast("Select it and copy", "", "warn"); } } }, ico("copy"), "Copy"),
+        c.wake.reliable ? null : el("small", { class: "warnline" }, "This looks made up. Check it in Windows network settings before using it.")));
+    box.replaceChildren(el("div", { class: "section-head", style: "margin-top:0" }, el("h2", {}, "How phones reach this PC"), el("span", {}, "")), wifi, any, wake);
+  }
+
+  function setOnline(on) { if (!ui.online) return; ui.online.querySelector(".dot").classList.toggle("off", !on); ui.online.lastChild.textContent = state.pc + (on ? " · Online" : " · Offline"); }
+  function emptyArt() { const w = el("div"); w.innerHTML = '<svg viewBox="0 0 120 90" fill="none"><rect x="44" y="8" width="32" height="64" rx="8" stroke="rgba(148,178,220,.45)" stroke-width="2"/><rect x="49" y="16" width="22" height="42" rx="4" fill="rgba(34,211,238,.08)"/><circle cx="60" cy="64" r="2" fill="rgba(148,178,220,.5)"/><path d="M20 40c6-10 14-14 22-14M100 40c-6-10-14-14-22-14" stroke="rgba(34,211,238,.4)" stroke-width="2" stroke-linecap="round" stroke-dasharray="3 6"/></svg>'; return w.firstChild; }
+
+  async function devices() {
+    let list;
+    try { list = await call("/admin/devices"); setOnline(true); } catch (e) { if (e.status === 401) { clearTimers(); load(); } else setOnline(false); return; }
+    const fresh = known ? list.filter((d) => !known.has(d.id)) : [];
+    known = new Set(list.map((d) => d.id));
+    if (fresh.length) { toast(fresh[0].name + " connected", "Ready to use from now on.", ""); pairing(); } // the code that was used is spent
+    const sig = JSON.stringify(list.map((d) => [d.id, d.name, d.blocked, isLive(d.last_seen), ago(d.last_seen), d.last_ip]));
+    if (sig === paintedSig) return; // nothing changed: leave the cards alone so they don't flicker
+    const firstPaint = paintedSig === ""; paintedSig = sig;
+    ui.devices = list;
+    if (ui.view === "overview" || ui.view === "phones") paintView();
+    if (!list.length) {
+      devicesBox.replaceChildren(el("div", { class: "card empty", style: "grid-column:1/-1" }, emptyArt(), el("h3", {}, "No phone connected yet"), el("p", {}, "Scan the code above with your phone's camera. It will appear here the moment it connects.")));
+      return;
+    }
+    devicesBox.replaceChildren(...list.map((d, i) => deviceCard(d, fresh.some((f) => f.id === d.id), firstPaint ? i : -1)));
+  }
+
+  function deviceCard(d, isNew, i) {
+    const live = isLive(d.last_seen) && !d.blocked;
+    return el("article", { class: "card device" + (d.blocked ? " blocked" : "") + (isNew ? " fresh" : ""), style: i >= 0 ? "animation-delay:" + (i * 70) + "ms" : (isNew ? "" : "animation: none") },
+      el("div", { class: "top" }, el("div", { class: "badge" }, ico(kindOf(d.name))),
+        el("div", { class: "grow" }, el("h3", { title: d.name }, d.name), el("div", { class: "meta" }, ago(d.last_seen) + (d.last_ip ? " · " + d.last_ip : ""))),
+        d.blocked ? el("span", { class: "tag bad" }, "Blocked") : d.signed_out ? el("span", { class: "tag", title: "This phone signed itself out. It comes back as the same phone when it connects again." }, "Signed out") : (!live && Date.now() - Date.parse(d.last_seen) > 14 * 864e5) ? el("span", { class: "tag", title: "Not used for over two weeks. Remove it if this phone was reinstalled or is gone." }, "Not used lately") : el("span", { class: "tag ok" + (live ? " live" : "") }, live ? "Online" : "Allowed")),
+      el("div", { class: "actions" },
+        el("button", { class: "btn sm", onclick: async () => { const n = await ask({ title: "Rename this phone", text: "This is the name you see here and in the log.", input: true, value: d.name, ok: "Save" }); if (n) { await call("/admin/devices/" + d.id + "/rename", "POST", { name: n }); toast("Renamed", n, ""); devices(); } } }, ico("pencil"), "Rename"),
+        el("button", { class: "btn sm", onclick: async () => { await call("/admin/devices/" + d.id + (d.blocked ? "/unblock" : "/block"), "POST"); toast(d.blocked ? "Unblocked" : "Blocked", d.name, d.blocked ? "" : "warn"); devices(); } }, ico("ban"), d.blocked ? "Unblock" : "Block"),
+        el("button", { class: "btn sm danger", onclick: async () => { const yes = await ask({ title: "Remove “" + d.name + "”?", text: "It is signed out at once and must be paired again to use this PC.", ok: "Remove phone", danger: true }); if (yes) { await call("/admin/devices/" + d.id, "DELETE"); toast("Phone removed", d.name, "warn"); devices(); } } }, ico("trash"), "Remove")));
+  }
+
+  {
+    const splash = document.getElementById("splash");
+    if (splash) {
+      if (getComputedStyle(splash).display === "none") splash.remove();
+      else { splash.addEventListener("animationend", (e) => { if (e.animationName === "sp-out") splash.remove(); }); setTimeout(() => splash.remove(), 1500); }
+    }
+  }
+  load();
+})();
+</script>
+</body>
+</html>

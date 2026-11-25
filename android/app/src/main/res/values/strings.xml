@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- the product's name: change it here (and in app/build.gradle.kts) when it is renamed -->
+    <string name="app_name">AccessFromPhone</string>
+
+    <string name="welcome_title">Connect to your PC</string>
+    <string name="welcome_text">Scan the QR code shown on your PC,\nor type the code under it.</string>
+    <string name="scan_button">Scan the QR code</string>
+    <string name="type_button">Type the address instead</string>
+    <string name="welcome_note">Private. Your files stay on your PC, and you approve every change.</string>
+
+    <string name="scan_title">Scan the QR code</string>
+    <string name="scan_hint">Point the camera at the QR code on your PC</string>
+    <string name="scan_wrong">That QR code isn\'t from your PC</string>
+    <string name="camera_needed">The camera is needed to scan the code</string>
+    <string name="allow_camera">Allow the camera</string>
+    <string name="torch">Light</string>
+
+    <string name="connecting_title">Connecting to your PC…</string>
+    <string name="problem_where">PC: %1$s</string>
+    <string name="go_back">Go back to the previous PC</string>
+    <string name="problem_retrying">Checking again automatically…</string>
+
+    <string name="p_phone_offline_title">This phone is offline</string>
+    <string name="p_phone_offline_text">Turn on Wi-Fi or mobile data. This goes away by itself as soon as there is a connection.</string>
+    <string name="p_other_network_title">Not on your PC\'s network</string>
+    <string name="p_other_network_text">Your PC is on your home or office Wi-Fi, and this phone isn\'t. Connect to that Wi-Fi, or set up access from anywhere on the PC.</string>
+    <string name="p_app_not_running_title">Your PC is on, but the app isn\'t running</string>
+    <string name="p_app_not_running_text">Open the app on your PC (Start menu or the tray icon). This goes away by itself.</string>
+    <string name="p_pc_unreachable_title">Can\'t reach your PC</string>
+    <string name="p_pc_unreachable_text">It may be switched off, asleep, or have lost its Wi-Fi or internet, or this phone may be on a different Wi-Fi. This goes away by itself as soon as it answers.</string>
+    <string name="p_pc_offline_title">Your PC is offline</string>
+    <string name="p_pc_offline_text">It is switched off, asleep, or has no internet connection. This goes away by itself as soon as it is back.</string>
+    <string name="p_name_not_found_title">Can\'t find your PC\'s address</string>
+    <string name="p_name_not_found_text">Check this phone\'s internet connection. If that is fine, the PC may be offline. If its address changed, scan a new code to reconnect.</string>
+    <string name="p_address_changed_title">Your PC has a new address</string>
+    <string name="p_address_changed_text">It is on this Wi-Fi, but at a different address than before. Scan the code on its page to reconnect.</string>
+    <string name="p_pc_error_title">Your PC had a problem</string>
+    <string name="p_pc_error_text">It answered with an error. Give it a moment. If it keeps happening, restart the app on the PC.</string>
+    <string name="problem_certificate">This PC looks different</string>
+    <string name="problem_certificate_hint">Its security certificate changed since you connected. If you didn\'t reinstall the app on the PC, don\'t continue. Connect again by scanning its QR code.</string>
+    <string name="retry">Try again</string>
+    <string name="view_saved_chats">View saved chats</string>
+    <string name="back_again">Press Back again to exit</string>
+    <string name="use_pin">Use PIN</string>
+    <string name="unlock_app">Unlock Access</string>
+    <string name="scan_new">Scan a new code</string>
+    <string name="other_pc">Use a different PC</string>
+
+    <string name="address_title">Address of your PC</string>
+    <string name="address_message">For example 192.168.1.20:8765, or the address the PC page shows under Anywhere.</string>
+    <string name="address_hint">192.168.1.20:8765</string>
+    <string name="address_bad">That doesn\'t look like an address</string>
+    <string name="connect">Connect</string>
+
+    <string name="push_channel">Requests</string>
+    <string name="push_channel_hint">A plan is ready to approve, a job finished, or your PC needs an answer.</string>
+    <string name="push_unavailable">This build of the app was made without push notifications (it needs the project\'s google-services.json). Everything else works.</string>
+    <string name="push_failed">Couldn\'t get this phone\'s notification address. Check that it is online, then try again.</string>
+    <string name="push_denied">Notifications are blocked for this app. Allow them in the phone\'s Settings, under Apps.</string>
+
+    <string name="saved">Saved to Downloads: %1$s</string>
+    <string name="downloads_channel">Downloads</string>
+    <string name="save_failed">Couldn\'t save the file</string>
+</resources>

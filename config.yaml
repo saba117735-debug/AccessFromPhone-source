@@ -1,0 +1,115 @@
+# AccessFromPhone configuration. Every setting lives here.
+# Relative paths are resolved against the folder that holds this file.
+# Override any value with an environment variable, e.g. HANDOFF_SERVER__PORT=9000
+# Secrets (API keys) never go in this file.
+
+server:
+  host: 0.0.0.0                            # listen on every network interface
+  port: 8765
+  public_url: auto                         # auto = this PC's Wi-Fi address, found again at every start (no IP to edit). Or a fixed address, e.g. http://10.0.0.5:8765
+  token_file: data/token.txt               # phone access token, created on first start
+  https: true                              # encrypted link. Needed for voice input on a phone (the microphone requires it)
+                                           # the phone warns once ("not private"): Advanced, then Continue. false = plain http
+  open_connect_page: true                 # on start, open a big "Connect your phone" QR code on this PC. false = QR in the terminal only
+
+accounts:
+  enabled: true                            # the owner signs in on the PC; each phone pairs once by scanning a code. false = one shared link (testing only)
+  sign_in: auto                            # auto = on Windows, sign in to the PC page with your Windows user name and password (nothing new to create).
+                                           # password = make a separate app password at setup (used on other systems)
+  admin_port: 8766                         # the PC's own page (set up, connect phones, manage them). Only reachable from this PC
+  pairing_minutes: 2                       # how long a QR / pairing code works, for one phone only
+  max_devices: 10                          # phones that can be paired at once
+  forget_after_days: 0                     # remove phones not seen for this many days (0 = never). Cleans up reinstalled / cleared phones
+  session_minutes: 60                      # how long the PC page stays signed in while you use it
+
+unlock:                                    # unlocking the PC by asking. Set up at the PC: python -m handoff.unlock.setup install
+  agent_port: 8769                         # where the unlock helper listens, on this PC only
+  wait_seconds: 10                         # how long to wait for the lock screen to go away after the sign-in is typed
+
+connectivity:
+  lan_address: ip                          # ip = the QR holds the Wi-Fi address. name = this PC's .local name, which keeps working if the address changes
+  mdns: true                               # announce this PC on the local network so its .local name can be found
+  anywhere: off                            # Tailscale is optional and off. Use your own relay (the relay: section) instead. auto = offer Tailscale if it is installed
+  anywhere_port: 8443                      # the private listener that only your Tailscale network can reach
+  tailscale_path: ""                       # only if tailscale.exe is not found by itself
+
+relay:                                     # reach this PC from ANY network through YOUR server (no Tailscale, nothing on the phone or router)
+  enabled: false                           # true once your relay is running. See "Your own relay" in the README
+  url: http://localhost:9000               # your relay, e.g. https://xyz.com. Phones then open https://<this-pc's-id>.xyz.com
+  # register_key: set the HANDOFF_RELAY__REGISTER_KEY environment variable instead of writing the secret here
+
+push:                                      # notifications on a locked phone: "Plan ready - tap to approve", "Job finished"
+  enabled: true
+  notify_on: [awaiting, needs_access, done, failed, pc_sleep, pc_restart, pc_shutdown, pc_closing, pc_battery, pc_plugged, pc_unplugged]   # pc_*: told BEFORE this PC goes away (it can't tell the phone afterwards)
+  battery_low_percent: 15                  # "PC battery is low" at this level when unplugged (and once more at 5%)
+  show_details: false                      # false = a notification only says THAT something needs you, never what you asked or found (it passes through Google/Apple)
+  min_seconds: 15                          # "Job finished" only for a request that took at least this long, so an instant answer does not buzz
+  credentials_file: C:\PageLogin\login-page\backend\.env   # where the push keys already are. They are READ from there, never copied into this folder.
+                                           # (VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, VAPID_SUBJECT, FIREBASE_SERVICE_ACCOUNT_PATH)
+  # vapid_private_key / firebase_service_account_file: or set them directly. The secret half goes in HANDOFF_PUSH__VAPID_PRIVATE_KEY, never here.
+  # ca_file: only if a work network re-signs the connection and Windows' own certificates are not enough.
+
+power:
+  remote_actions: [lock, screen_off, sleep]            # what the phone may ask this PC to do. Each one still waits for your approval. Add: hibernate, restart, shutdown
+  keep_awake: true                         # stop Windows sleeping while the app runs, so the phone can always reach the PC (the screen may still turn off)
+
+daily:                                     # everyday tools on the phone's Home screen: quick controls, inbox, notes, reminders, watchers, recent files, print, snap, briefing
+  enabled: true                            # false removes all of them
+  folder: ~/Documents/AccessFromPhone      # Inbox (sent from the phone), To phone (put files here for the phone), Notes, Screenshots
+  max_upload_mb: 100                       # the largest file the phone may send to the inbox
+  printing: true                           # print a file on this PC's default printer (each print is confirmed on the phone and logged)
+  notifications: false                     # show this PC's Windows notifications on the phone. Off by default: they can hold private messages
+  webcam: false                            # let the Admin phone take one photo with the webcam (needs: pip install opencv-python). Logged, and every phone is told
+
+agent:
+  allowed_folders:
+    - workspace                            # the agent can only touch these folders
+  ask_for_access: true                     # a request that needs any other folder asks you on the phone first (read only).
+                                           # false = only the folders listed here are ever used
+  allow_edit_grants: true                  # let you allow EDITING files in other folders from the phone's editor (each save is yours, with undo).
+                                           # Never inside read_only_folders. false = you can only edit inside allowed_folders
+  max_edit_kb: 512                         # the largest file the phone's editor opens
+  max_view_kb: 4096                        # the largest file the full-screen viewer shows (pictures, PDFs, text)
+  read_only_folders: []                    # optional: folders always readable without asking and NEVER changeable from the phone (a hard lock).
+                                           # Leave empty to be asked instead; then you can allow reading or editing per folder from the phone
+  max_job_minutes: 30
+  max_download_mb: 0                       # largest file the phone may download in MB; 0 = no limit
+  max_image_mb: 25                         # the largest edited picture the phone may save back
+
+approval:
+  require_for: [write, delete, send, deploy, run]   # write also covers move and copy; run is always asked
+  timeout_minutes: 15
+
+commands:                                  # let the agent run commands on this PC (PowerShell)
+  enabled: false                           # off by default. true = it may PROPOSE commands; you approve each one
+  timeout_seconds: 60                      # a command running longer than this is stopped
+  max_output_chars: 20000
+  allow_only: []                           # e.g. ["git status", "npm test"]: only commands starting with these
+  # deny: [...]                            # blocked patterns (regular expressions); a safe list is built in
+
+llm:
+  provider: anthropic                      # hosted Claude: fast, and your requests + file text it reads leave this PC. Or: auto (local model if Ollama has it), ollama, demo
+  hosted_model: claude-sonnet-5-5          # used when provider is anthropic. Requests then leave this PC
+  api_key_env: ANTHROPIC_API_KEY           # NAME of the environment variable holding the key (never put the key here)
+  memory_turns: 4                          # how many earlier requests the model is reminded of (each costs reading time)
+  model: qwen2.5:3b                        # any model you have pulled in Ollama (ollama pull <name>)
+  base_url: http://127.0.0.1:11434         # where Ollama listens on this PC
+  timeout_seconds: 300                     # how long to wait for the model. A PC without a graphics card can be slow. You can press Stop any time
+  max_rounds: 6                            # how many tool steps the model may take per request
+  temperature: 0.2
+  keep_alive: 30m                          # keep the model in memory between requests (faster replies)
+  # Speed on a PC without a graphics card (this laptop reads about 25-45 words a second and writes 5-8):
+  num_thread: auto                         # CPU threads. auto = all but 2 cores (measured ~50% faster than Ollama's own pick). A number, or null for Ollama's choice
+  num_ctx: 4096                            # how much text the model holds at once
+  max_output_tokens: 700                   # an answer longer than this is cut off and never used (so a half-written change is never applied)
+  file_chars: 3500                         # how much of a file the model is shown (about 900 tokens). Lower = faster
+
+storage:
+  results_dir: data/results
+  snapshots_dir: data/snapshots
+  link_expiry_minutes: 60
+  database: data/app.db                    # one SQLite file: owner, paired phones, chats, audit trail, allowed folders. Back up this one file.
+
+logging:
+  level: info
+  audit_file: data/audit.log

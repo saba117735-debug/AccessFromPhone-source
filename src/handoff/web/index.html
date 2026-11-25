@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en" data-theme="dark" data-accent="cyan" data-text="m">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+<title>AccessFromPhone</title>
+<meta name="description" content="Ask your PC to do things from your phone. You approve every change.">
+<meta name="theme-color" content="#0b111b" id="themeColor">
+<meta name="color-scheme" content="dark light">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Access">
+<link rel="icon" href="/static/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/static/apple-touch-icon.png">
+<link rel="manifest" href="/static/manifest.webmanifest">
+<script>
+// Apply the saved look before the first paint, so the page never flashes the wrong theme.
+(function () {
+  try {
+    var s = JSON.parse(localStorage.getItem("afp_settings") || "{}"), r = document.documentElement;
+    var dark = s.theme === "dark" || (s.theme === "system" && matchMedia("(prefers-color-scheme: dark)").matches) || !s.theme;
+    r.dataset.theme = dark ? "dark" : "light";
+    if (s.accent) r.dataset.accent = s.accent;
+    if (s.text) r.dataset.text = s.text;
+    if (s.reduceMotion) r.dataset.motion = "off";
+  } catch (e) {}
+})();
+</script>
+<script>
+// The opening animation plays on every launch; tests and anyone who wants it off can set afp_splash_off.
+(function () {
+  try {
+    if (localStorage.getItem("afp_splash_off") === "1") document.documentElement.dataset.splash = "off";
+    // once per launch: a reload, a reconnect or coming back to the app does not replay it (a session lasts until the app or tab is closed)
+    else if (sessionStorage.getItem("afp_splash_seen") === "1") document.documentElement.dataset.splash = "off";
+    else sessionStorage.setItem("afp_splash_seen", "1");
+  } catch (e) {}
+})();
+</script>
+<link rel="stylesheet" href="/static/app.css">
+<link rel="stylesheet" href="/static/glass.css">
+</head>
+<body>
+<div class="splash" id="splash" aria-hidden="true">
+  <div class="sp-center">
+    <svg class="sp-mark" viewBox="0 0 80 80" width="92" height="92" focusable="false"><circle class="sp-ring" cx="40" cy="40" r="32" pathLength="100"/><circle class="sp-core" cx="40" cy="40" r="10"/></svg>
+    <div class="sp-word"><span>AccessFromPhone</span></div>
+    <p class="sp-tag">Your PC, from your pocket.</p>
+    <p class="sp-sub">Ask in plain words. You approve every change.</p>
+  </div>
+  <div class="sp-bar"><i></i></div>
+  <p class="sp-foot">Your PC. Your permissions.</p>
+</div>
+<div class="app" id="app">
+  <aside class="side" id="side" aria-label="Chats"></aside>
+  <div class="scrim" id="scrim" hidden></div>
+
+  <main class="main">
+    <div class="chat-ambient" aria-hidden="true">
+      <div class="chat-type">
+        <div class="chat-type-row" data-flow="left">
+          <div class="chat-type-run"><span>LISTEN</span><i>·</i><span>UNDERSTAND</span><i>·</i><span>THINK</span><i>·</i><span>RESPOND</span><i>·</i></div>
+          <div class="chat-type-run" aria-hidden="true"><span>LISTEN</span><i>·</i><span>UNDERSTAND</span><i>·</i><span>THINK</span><i>·</i><span>RESPOND</span><i>·</i></div>
+        </div>
+        <div class="chat-type-row" data-flow="right">
+          <div class="chat-type-run"><span>HUMAN INTENT</span><i>·</i><span>USEFUL IDEAS</span><i>·</i><span>YOUR CONTROL</span><i>·</i></div>
+          <div class="chat-type-run" aria-hidden="true"><span>HUMAN INTENT</span><i>·</i><span>USEFUL IDEAS</span><i>·</i><span>YOUR CONTROL</span><i>·</i></div>
+        </div>
+        <div class="chat-type-row" data-flow="left">
+          <div class="chat-type-run"><span>CURIOUS BY DESIGN</span><i>·</i><span>CAREFUL BY DEFAULT</span><i>·</i></div>
+          <div class="chat-type-run" aria-hidden="true"><span>CURIOUS BY DESIGN</span><i>·</i><span>CAREFUL BY DEFAULT</span><i>·</i></div>
+        </div>
+      </div>
+    </div>
+    <div class="offline" id="offline" role="status" hidden>
+      <span class="spin" aria-hidden="true"></span><span id="offlineText">Can't reach your PC. Retrying&hellip;</span><button class="offline-retry" id="offlineRetry" type="button">Try now</button>
+    </div>
+    <header class="top" id="top"></header>
+    <div class="session-bar" id="sessionBar" role="status" aria-live="polite" hidden></div>
+    <section class="home" id="home" aria-label="Home" hidden></section>
+    <div class="saved-bar" id="savedBar" role="status" hidden></div>
+    <div class="away-bar" id="awayBar" role="status" aria-live="polite" hidden></div>
+
+    <section class="scroller" id="scroller" aria-live="polite">
+      <div class="thread" id="thread"></div>
+    </section>
+    <button class="jump" id="jump" type="button" aria-label="Jump to the latest message" hidden></button>
+
+    <footer class="dock" id="dock"></footer>
+    <div class="dlbar" id="dlbar" hidden></div>
+    <nav class="tabbar" id="tabbar" aria-label="Main"></nav>
+  </main>
+
+  <aside class="canvas" id="canvas" aria-label="Open file" hidden></aside>
+</div>
+
+<div id="layer"></div>
+<div class="toasts" id="toasts" role="status" aria-live="polite"></div>
+<noscript><p style="padding:24px;color:#e6f1ff">AccessFromPhone needs JavaScript.</p></noscript>
+<script src="/static/conn.js" defer></script>
+<script src="/static/offline.js" defer></script>
+<script src="/static/queue.js" defer></script>
+<script src="/static/titles.js" defer></script>
+<script src="/static/access.js" defer></script>
+<script src="/static/screen.js" defer></script>
+<script src="/static/ux.js" defer></script>
+<script src="/static/app.js" defer></script>
+</body>
+</html>

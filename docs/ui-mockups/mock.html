@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>AccessFromPhone: design mock-ups</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root {
+    --bg: #060b16; --bg2: #0b1730; --surface: #0f1a30; --surface2: #13213d; --field: #0a1428;
+    --text: #e6f1ff; --muted: #8392ad; --faint: #4b5a74; --line: rgba(124,138,165,.22);
+    --a1: #22d3ee; --a2: #3b82f6; --ok: #34d399; --warn: #fbbf24; --bad: #f87171;
+    --grad: linear-gradient(135deg, var(--a1), var(--a2));
+    --font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body { font-family: var(--font); color: var(--text); background: radial-gradient(90% 70% at 50% 0%, #11264a 0%, #070d1b 60%, #04070f 100%); min-height: 100vh; display: grid; place-items: center; padding: 28px; }
+  svg { width: 1em; height: 1em; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+  .ic { display: inline-grid; place-items: center; }
+
+  /* ---------- the phone ---------- */
+  .phone { width: 390px; height: 800px; border-radius: 46px; padding: 11px; background: linear-gradient(160deg, #26324a, #0d1424); box-shadow: 0 40px 90px rgba(0,0,0,.6), inset 0 0 0 1.5px #3a4864; }
+  .screen { position: relative; height: 100%; border-radius: 36px; overflow: hidden; background: radial-gradient(120% 70% at 50% 0%, var(--bg2) 0%, var(--bg) 55%, #03050a 100%); display: flex; flex-direction: column; }
+  .notch { position: absolute; top: 9px; left: 50%; translate: -50% 0; width: 104px; height: 28px; border-radius: 20px; background: #02040a; z-index: 5; }
+  .statusbar { height: 46px; padding: 14px 26px 0; display: flex; justify-content: space-between; font-size: 13px; font-weight: 700; flex: none; }
+  .statusbar span:last-child { display: flex; gap: 6px; align-items: center; }
+  .scroll { flex: 1; min-height: 0; overflow: hidden; padding: 6px 16px 10px; display: flex; flex-direction: column; gap: 12px; }
+
+  .strip { display: flex; align-items: center; gap: 8px; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 0 4px rgba(52,211,153,.18); }
+  .strip b { font-size: 17px; letter-spacing: .01em; }
+  .strip small { color: var(--muted); font-size: 12px; }
+  .grow { flex: 1; }
+  .chip { display: inline-flex; align-items: center; gap: 5px; padding: 4px 9px; border-radius: 999px; font-size: 11.5px; font-weight: 600; background: rgba(124,138,165,.12); border: 1px solid var(--line); color: var(--muted); }
+  .chip.ok { color: var(--ok); background: rgba(52,211,153,.1); border-color: rgba(52,211,153,.3); }
+  .chip.warn { color: var(--warn); background: rgba(251,191,36,.1); border-color: rgba(251,191,36,.32); }
+  .chip.bad { color: var(--bad); background: rgba(248,113,113,.1); border-color: rgba(248,113,113,.3); }
+  .iconbtn { width: 36px; height: 36px; border-radius: 12px; display: grid; place-items: center; background: rgba(124,138,165,.1); border: 1px solid var(--line); color: var(--muted); font-size: 17px; }
+
+  .banner { display: flex; align-items: center; gap: 11px; padding: 11px 13px; border-radius: 16px; background: linear-gradient(90deg, rgba(251,191,36,.16), rgba(251,191,36,.06)); border: 1px solid rgba(251,191,36,.38); }
+  .banner .ic { width: 32px; height: 32px; border-radius: 50%; background: rgba(251,191,36,.18); color: var(--warn); font-size: 17px; }
+  .banner b { display: block; font-size: 13.5px; } .banner span { font-size: 12px; color: #d9c58c; }
+
+  .card { border-radius: 20px; padding: 14px; background: linear-gradient(180deg, rgba(19,33,61,.86), rgba(13,24,45,.86)); border: 1px solid var(--line); }
+  .pc { position: relative; overflow: hidden; }
+  .pc::before { content: ""; position: absolute; inset: -40% -20% auto auto; width: 220px; height: 220px; background: radial-gradient(circle, rgba(34,211,238,.18), transparent 65%); }
+  .pc-top { display: flex; align-items: center; gap: 12px; position: relative; }
+  .pcicon { width: 46px; height: 46px; border-radius: 15px; display: grid; place-items: center; font-size: 24px; color: var(--a1); background: rgba(34,211,238,.1); border: 1px solid rgba(34,211,238,.3); }
+  .pc-top b { font-size: 18px; display: block; } .pc-top small { color: var(--muted); font-size: 12.5px; }
+  .btns { display: flex; gap: 10px; margin-top: 14px; position: relative; }
+  .btn { flex: 1; height: 46px; border-radius: 14px; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 700; font-size: 15px; border: 1px solid var(--line); background: rgba(124,138,165,.1); color: var(--text); }
+  .btn.primary { flex: 1.6; background: var(--grad); color: #04121a; border: 0; box-shadow: 0 10px 26px rgba(34,211,238,.25); }
+  .btn.ghost { background: transparent; }
+  .tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 12px; }
+  .tile { border-radius: 13px; padding: 8px 10px; background: rgba(6,12,24,.5); border: 1px solid var(--line); }
+  .tile small { color: var(--muted); font-size: 10.5px; display: block; } .tile b { font-size: 14px; }
+  .bar { height: 4px; border-radius: 4px; background: rgba(124,138,165,.2); margin-top: 6px; overflow: hidden; } .bar i { display: block; height: 100%; background: var(--grad); }
+
+  .sect { display: flex; justify-content: space-between; align-items: baseline; margin: 2px 2px -4px; }
+  .sect b { font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); } .sect a { font-size: 12px; color: var(--a1); }
+  .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 9px; }
+  .qa { aspect-ratio: 1 / 1.05; border-radius: 16px; display: grid; place-items: center; align-content: center; gap: 6px; background: rgba(19,33,61,.7); border: 1px solid var(--line); font-size: 11.5px; color: var(--muted); font-weight: 600; }
+  .qa .ic { width: 38px; height: 38px; border-radius: 12px; font-size: 20px; }
+  .qa.c1 .ic { color: var(--a1); background: rgba(34,211,238,.12); } .qa.c2 .ic { color: #c084fc; background: rgba(192,132,252,.13); }
+  .qa.c3 .ic { color: var(--warn); background: rgba(251,191,36,.12); } .qa.c4 .ic { color: var(--ok); background: rgba(52,211,153,.12); }
+  .qa.c5 .ic { color: #fb7185; background: rgba(251,113,133,.12); } .qa.c6 .ic { color: var(--a2); background: rgba(59,130,246,.14); }
+
+  .row { display: flex; align-items: center; gap: 11px; padding: 10px 2px; border-bottom: 1px solid rgba(124,138,165,.12); }
+  .row:last-child { border: 0; }
+  .row .ic { width: 34px; height: 34px; border-radius: 11px; background: rgba(52,211,153,.12); color: var(--ok); font-size: 16px; }
+  .row b { font-size: 13.5px; display: block; font-weight: 600; } .row small { color: var(--muted); font-size: 11.5px; }
+  .row time { color: var(--faint); font-size: 11.5px; }
+
+  .tabs { flex: none; display: grid; grid-template-columns: repeat(4, 1fr); padding: 8px 10px 20px; background: rgba(8,14,28,.92); border-top: 1px solid var(--line); }
+  .tab { display: grid; justify-items: center; gap: 3px; font-size: 10.5px; font-weight: 600; color: var(--faint); padding: 4px 0; position: relative; }
+  .tab .ic { font-size: 22px; } .tab.on { color: var(--a1); }
+  .tab.on::before { content: ""; position: absolute; top: -9px; width: 26px; height: 3px; border-radius: 3px; background: var(--grad); }
+  .tab em { position: absolute; top: 0; right: 28%; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 9px; background: var(--warn); color: #1a1202; font-size: 10px; font-style: normal; display: grid; place-items: center; }
+
+  /* checklist */
+  .check { display: flex; align-items: center; gap: 12px; padding: 9px 0; }
+  .check .mark { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font-size: 14px; border: 1.5px solid var(--faint); color: transparent; }
+  .check.done .mark { background: var(--ok); border-color: var(--ok); color: #04170f; }
+  .check.next .mark { border-color: var(--a1); color: var(--a1); background: rgba(34,211,238,.1); }
+  .check b { font-size: 14px; display: block; } .check small { color: var(--muted); font-size: 12px; }
+  .check.done b { color: var(--muted); text-decoration: line-through; text-decoration-color: rgba(131,147,173,.5); }
+  .progress { height: 6px; border-radius: 6px; background: rgba(124,138,165,.2); margin: 10px 0 4px; overflow: hidden; } .progress i { display: block; height: 100%; width: 50%; background: var(--grad); border-radius: 6px; }
+
+  /* chat */
+  .head { display: flex; align-items: center; gap: 10px; padding: 4px 16px 8px; flex: none; }
+  .orb { width: 34px; height: 34px; border-radius: 50%; border: 3px solid var(--a1); border-right-color: transparent; position: relative; } .orb::after { content: ""; position: absolute; inset: 7px; border-radius: 50%; background: var(--grad); }
+  .head b { font-size: 16px; }
+  .me { align-self: flex-end; max-width: 78%; padding: 9px 14px; border-radius: 18px 18px 6px 18px; background: rgba(34,211,238,.1); border: 1px solid rgba(34,211,238,.34); font-size: 15px; }
+  .me small { display: block; color: var(--muted); font-size: 10.5px; margin-top: 2px; text-align: right; }
+  .bot { display: flex; gap: 10px; } .bot .av { width: 28px; height: 28px; border-radius: 50%; border: 2.5px solid var(--a1); border-right-color: transparent; flex: none; margin-top: 2px; }
+  .bot .body { flex: 1; min-width: 0; display: grid; gap: 7px; } .bot .who { display: flex; gap: 8px; align-items: center; font-size: 13px; font-weight: 700; }
+  .reply { border-left: 3px solid rgba(34,211,238,.35); padding: 2px 0 2px 11px; font-size: 14.5px; line-height: 1.45; }
+  .plan { border-radius: 16px; padding: 12px; border: 1px solid rgba(34,211,238,.28); background: rgba(13,24,45,.7); font-size: 13px; }
+  .plan .t { display: flex; gap: 8px; align-items: center; font-weight: 700; font-size: 13.5px; margin-bottom: 6px; }
+  .chips { display: flex; gap: 8px; overflow: hidden; padding: 2px 16px 8px; flex: none; }
+  .sugg { white-space: nowrap; padding: 8px 13px; border-radius: 999px; font-size: 13px; font-weight: 600; background: rgba(19,33,61,.9); border: 1px solid rgba(34,211,238,.28); color: var(--a1); display: inline-flex; gap: 6px; align-items: center; }
+  .composer { margin: 0 14px 10px; border-radius: 26px; padding: 6px 6px 6px 8px; display: flex; align-items: center; gap: 8px; background: rgba(10,20,40,.9); border: 1px solid rgba(34,211,238,.32); flex: none; }
+  .composer .round { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; font-size: 19px; background: rgba(34,211,238,.1); color: var(--a1); } .composer .round.send { background: var(--grad); color: #04121a; }
+  .composer span.ph { flex: 1; color: var(--faint); font-size: 15px; }
+
+  /* sheet */
+  .dim { position: absolute; inset: 0; background: rgba(2,5,10,.62); backdrop-filter: blur(2px); z-index: 3; }
+  .sheet { position: absolute; left: 0; right: 0; bottom: 0; z-index: 4; border-radius: 28px 28px 0 0; padding: 10px 18px 26px; background: linear-gradient(180deg, #14233f, #0c172c); border-top: 1px solid rgba(34,211,238,.3); box-shadow: 0 -20px 50px rgba(0,0,0,.5); }
+  .grab { width: 44px; height: 5px; border-radius: 5px; background: rgba(124,138,165,.4); margin: 0 auto 14px; }
+  .sheet h3 { font-size: 20px; display: flex; gap: 10px; align-items: center; } .sheet h3 .ic { width: 38px; height: 38px; border-radius: 12px; color: var(--warn); background: rgba(251,191,36,.14); font-size: 20px; }
+  .sheet p.lead { color: var(--muted); font-size: 13.5px; margin: 8px 0 12px; line-height: 1.45; }
+  .warn { display: flex; gap: 9px; align-items: flex-start; padding: 10px 12px; border-radius: 14px; font-size: 12.5px; color: #e9d596; background: rgba(251,191,36,.09); border: 1px solid rgba(251,191,36,.3); line-height: 1.4; }
+  .pin { display: flex; justify-content: center; gap: 10px; margin: 16px 0 6px; }
+  .pin i { width: 40px; height: 48px; border-radius: 13px; background: var(--field); border: 1px solid var(--line); display: grid; place-items: center; font-style: normal; font-size: 22px; color: var(--text); }
+  .pin i.on { border-color: var(--a1); box-shadow: 0 0 0 3px rgba(34,211,238,.16); }
+  .pinhint { text-align: center; color: var(--muted); font-size: 12px; margin-bottom: 14px; }
+  .sheet .btns { margin-top: 0; }
+
+  /* ---------- the desktop window ---------- */
+  .win { width: 1240px; height: 780px; border-radius: 14px; overflow: hidden; background: var(--bg); box-shadow: 0 40px 100px rgba(0,0,0,.65), 0 0 0 1px #2a3652; display: flex; flex-direction: column; }
+  .title { height: 38px; flex: none; display: flex; align-items: center; gap: 8px; padding: 0 14px; background: #0a1224; border-bottom: 1px solid var(--line); font-size: 12.5px; color: var(--muted); }
+  .title i { width: 12px; height: 12px; border-radius: 50%; } .title .grow { text-align: center; }
+  .deskbody { flex: 1; min-height: 0; display: grid; grid-template-columns: 232px 1fr; background: radial-gradient(100% 60% at 60% 0%, var(--bg2) 0%, var(--bg) 60%); }
+  .rail { padding: 18px 12px; border-right: 1px solid var(--line); background: rgba(6,11,22,.7); display: flex; flex-direction: column; gap: 4px; }
+  .brand { display: flex; gap: 10px; align-items: center; padding: 4px 8px 16px; font-weight: 800; letter-spacing: .2em; font-size: 14px; background: none; }
+  .brand b { background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .nav { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 12px; font-size: 14px; font-weight: 600; color: var(--muted); }
+  .nav .ic { font-size: 18px; } .nav.on { color: var(--text); background: rgba(34,211,238,.1); box-shadow: inset 3px 0 0 var(--a1); } .nav em { margin-left: auto; font-style: normal; font-size: 11px; padding: 2px 7px; border-radius: 9px; background: var(--warn); color: #1a1202; }
+  .rail .me2 { margin-top: auto; display: flex; gap: 10px; align-items: center; padding: 10px; border-radius: 14px; background: rgba(19,33,61,.6); border: 1px solid var(--line); font-size: 13px; }
+  .rail .me2 .av { width: 32px; height: 32px; border-radius: 50%; background: var(--grad); display: grid; place-items: center; color: #04121a; font-weight: 800; }
+  .main { padding: 22px 26px; overflow: hidden; display: grid; gap: 16px; align-content: start; }
+  .hello { display: flex; align-items: center; gap: 14px; } .hello h1 { font-size: 24px; } .hello p { color: var(--muted); font-size: 13.5px; margin-top: 2px; }
+  .cols { display: grid; grid-template-columns: 1.15fr 1fr 300px; gap: 16px; align-items: start; }
+  .stack { display: grid; gap: 16px; }
+  .card h2 { font-size: 15px; display: flex; align-items: center; gap: 9px; margin-bottom: 10px; } .card h2 .ic { color: var(--a1); font-size: 17px; } .card h2 .chip { margin-left: auto; }
+  .dev { display: flex; align-items: center; gap: 11px; padding: 10px; border-radius: 14px; background: rgba(6,12,24,.45); border: 1px solid var(--line); margin-top: 8px; }
+  .dev .ic { width: 38px; height: 38px; border-radius: 12px; background: rgba(34,211,238,.1); color: var(--a1); font-size: 19px; } .dev b { font-size: 14px; display: block; } .dev small { color: var(--muted); font-size: 12px; }
+  .meta { color: var(--muted); font-size: 13px; line-height: 1.5; }
+  .qr { width: 188px; height: 188px; margin: 6px auto 10px; border-radius: 16px; background: #fff; padding: 12px; display: grid; grid-template-columns: repeat(21, 1fr); gap: 0; }
+  .qr i { background: #0b1220; } .qr i.w { background: #fff; }
+  .code { text-align: center; font-family: ui-monospace, Consolas, monospace; font-size: 22px; letter-spacing: .2em; font-weight: 700; color: var(--a1); }
+  .wide { grid-column: 1 / -1; }
+  .stat { display: flex; gap: 12px; } .stat .tile { flex: 1; }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="home" viewBox="0 0 24 24"><path d="M3 11 12 3l9 8M5 10v10h5v-6h4v6h5V10"/></symbol>
+    <symbol id="chat" viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.5 7.2L4 20l1-4.5A8 8 0 1 1 21 12z"/></symbol>
+    <symbol id="folder" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></symbol>
+    <symbol id="pc" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></symbol>
+    <symbol id="lock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></symbol>
+    <symbol id="unlock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 7.5-2"/></symbol>
+    <symbol id="image" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="m21 16-5-5-9 9"/></symbol>
+    <symbol id="power" viewBox="0 0 24 24"><path d="M12 3v9M6.3 6.7a8 8 0 1 0 11.4 0"/></symbol>
+    <symbol id="moon" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></symbol>
+    <symbol id="battery" viewBox="0 0 24 24"><rect x="2" y="7" width="17" height="10" rx="2"/><path d="M22 11v2M6 10v4M10 10v4"/></symbol>
+    <symbol id="wifi" viewBox="0 0 24 24"><path d="M2 9a15 15 0 0 1 20 0M5 12.5a10 10 0 0 1 14 0M8.5 16a5 5 0 0 1 7 0M12 19.5h.01"/></symbol>
+    <symbol id="bell" viewBox="0 0 24 24"><path d="M6 9a6 6 0 0 1 12 0c0 6 2 7 2 7H4s2-1 2-7M10 20a2 2 0 0 0 4 0"/></symbol>
+    <symbol id="check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></symbol>
+    <symbol id="alert" viewBox="0 0 24 24"><path d="M12 3 2 20h20zM12 10v5M12 17.5h.01"/></symbol>
+    <symbol id="mic" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></symbol>
+    <symbol id="send" viewBox="0 0 24 24"><path d="M12 19V5M6 11l6-6 6 6"/></symbol>
+    <symbol id="gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1.3l2-1.5-2-3.4-2.3 1a7 7 0 0 0-2.2-1.3L14 3h-4l-.4 2.5a7 7 0 0 0-2.2 1.3l-2.3-1-2 3.4 2 1.5A7 7 0 0 0 5 12c0 .4 0 .9.1 1.3l-2 1.5 2 3.4 2.3-1a7 7 0 0 0 2.2 1.3L10 21h4l.4-2.5a7 7 0 0 0 2.2-1.3l2.3 1 2-3.4-2-1.5c.1-.4.1-.9.1-1.3z"/></symbol>
+    <symbol id="phone" viewBox="0 0 24 24"><rect x="7" y="2" width="10" height="20" rx="2.5"/><path d="M11 18.5h2"/></symbol>
+    <symbol id="activity" viewBox="0 0 24 24"><path d="M3 12h4l3-8 4 16 3-8h4"/></symbol>
+    <symbol id="shot" viewBox="0 0 24 24"><path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3"/><circle cx="12" cy="12" r="3"/></symbol>
+    <symbol id="clip" viewBox="0 0 24 24"><rect x="6" y="4" width="12" height="17" rx="2"/><path d="M9 4V3h6v1M9 10h6M9 14h4"/></symbol>
+    <symbol id="grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></symbol>
+    <symbol id="shield" viewBox="0 0 24 24"><path d="M12 3 4 6v6c0 5 3.4 8 8 9 4.6-1 8-4 8-9V6z"/><path d="m9 12 2 2 4-4"/></symbol>
+    <symbol id="globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></symbol>
+    <symbol id="plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="chev" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></symbol>
+  </defs>
+</svg>
+<div id="stage"></div>
+<script>
+  const I = (n, extra = "") => `<span class="ic ${extra}"><svg viewBox="0 0 24 24"><use href="#${n}"/></svg></span>`;
+  const status = `<div class="statusbar"><span>9:41</span><span>${I("wifi")}${I("battery")}</span></div><div class="notch"></div>`;
+  const tabs = (on, badge) => `<nav class="tabs">${[["home", "Home"], ["chat", "Chat"], ["folder", "Files"], ["pc", "PC"]]
+    .map(([n, l]) => `<div class="tab ${on === l ? "on" : ""}">${I(n)}<span>${l}</span>${l === "Chat" && badge ? `<em>${badge}</em>` : ""}</div>`).join("")}</nav>`;
+  const phone = (inner) => `<div class="phone"><div class="screen">${status}${inner}</div></div>`;
+  const strip = `<div class="strip"><span class="dot"></span><div><b>MY-PC</b><br><small>Online · same Wi-Fi</small></div><div class="grow"></div>
+      <span class="chip ok">${I("battery")} 82%</span><div class="iconbtn">${I("bell")}</div></div>`;
+
+  const screens = {
+    home: () => phone(`<div class="scroll">${strip}
+      <div class="banner">${I("alert")}<div><b>1 request needs you</b><span>Unlock this PC · waiting for your PIN</span></div><div class="grow"></div>${I("chev")}</div>
+      <div class="card pc"><div class="pc-top"><div class="pcicon">${I("pc")}</div><div class="grow"><b>MY-PC</b><small>Locked since 9:12 AM</small></div><span class="chip warn">${I("lock")} Locked</span></div>
+        <div class="btns"><div class="btn primary">${I("unlock")} Unlock</div><div class="btn">${I("moon")} Sleep</div></div>
+        <div class="tiles"><div class="tile"><small>CPU</small><b>24%</b><div class="bar"><i style="width:24%"></i></div></div>
+          <div class="tile"><small>Memory</small><b>61%</b><div class="bar"><i style="width:61%"></i></div></div>
+          <div class="tile"><small>Disk free</small><b>112 GB</b><div class="bar"><i style="width:38%"></i></div></div></div></div>
+      <div class="sect"><b>Quick actions</b><a>Edit</a></div>
+      <div class="grid">${[["folder", "Files", 1], ["image", "Pictures", 2], ["lock", "Lock", 3], ["moon", "Sleep", 6], ["shot", "Screenshot", 5], ["clip", "Clipboard", 4], ["battery", "Battery", 4], ["plus", "More", 6]]
+        .map(([n, l, c]) => `<div class="qa c${c}">${I(n)}<span>${l}</span></div>`).join("")}</div>
+      <div class="sect"><b>Recent</b><a>See all</a></div>
+      <div class="card" style="padding:4px 14px"><div class="row">${I("check")}<div class="grow"><b>Zipped the logs folder</b><small>Done · 3 files changed</small></div><time>2m</time></div>
+        <div class="row">${I("check")}<div class="grow"><b>Battery status</b><small>82% and charging</small></div><time>1h</time></div></div>
+    </div>${tabs("Home", 1)}`),
+
+    first: () => phone(`<div class="scroll">${strip}
+      <div class="card"><div style="display:flex;align-items:center;gap:10px"><b style="font-size:17px">Get set up</b><div class="grow"></div><span class="chip ok">2 of 4 done</span></div>
+        <div class="progress"><i></i></div>
+        <div class="check done"><span class="mark">${I("check")}</span><div><b>Connect your phone</b><small>Paired as Afza’s phone</small></div></div>
+        <div class="check done"><span class="mark">${I("check")}</span><div><b>Allow a folder</b><small>Documents · read only</small></div></div>
+        <div class="check next"><span class="mark">${I("plus")}</span><div class="grow"><b>Turn on notifications</b><small>Know when a request needs you</small></div><span class="chip" style="color:var(--a1);border-color:rgba(34,211,238,.4)">Turn on</span></div>
+        <div class="check"><span class="mark"></span><div class="grow"><b>Set up unlocking</b><small>Unlock this PC from your phone</small></div><span class="chip" style="color:var(--a1);border-color:rgba(34,211,238,.4)">Set up</span></div></div>
+      <div class="card pc"><div class="pc-top"><div class="pcicon">${I("pc")}</div><div class="grow"><b>MY-PC</b><small>Unlocked · screen on</small></div><span class="chip ok">${I("check")} Ready</span></div>
+        <div class="btns"><div class="btn primary">${I("lock")} Lock</div><div class="btn">${I("moon")} Sleep</div></div></div>
+      <div class="sect"><b>Quick actions</b><a>Edit</a></div>
+      <div class="grid">${[["folder", "Files", 1], ["image", "Pictures", 2], ["shot", "Screenshot", 5], ["plus", "More", 6]].map(([n, l, c]) => `<div class="qa c${c}">${I(n)}<span>${l}</span></div>`).join("")}</div>
+    </div>${tabs("Home")}`),
+
+    chat: () => phone(`<div class="head"><div class="orb"></div><b>Unlock my PC</b><div class="grow"></div><div class="iconbtn">${I("gear")}</div></div>
+      <div class="scroll" style="gap:14px;justify-content:flex-end">
+        <div class="me">unlock my PC<small>9:12 AM</small></div>
+        <div class="bot"><div class="av"></div><div class="body"><div class="who">Access <span class="chip ok">Done</span></div>
+          <div class="reply">The PC is unlocked.</div>
+          <div class="plan"><div class="t">${I("check")} What I did</div><span style="color:var(--muted)">Typed your saved sign-in at the lock screen · 2 s</span></div></div></div>
+        <div class="me">what's in Downloads<small>9:20 AM</small></div>
+        <div class="bot"><div class="av"></div><div class="body"><div class="who">Access <span class="chip ok">Done</span></div>
+          <div class="reply">12 files · 4 folders. The newest is <b>invoice-nov.pdf</b>.</div>
+          <div class="btns" style="margin:0"><div class="btn primary" style="height:42px;font-size:14px">${I("folder")} Browse this folder</div></div></div></div>
+      </div>
+      <div class="chips"><span class="sugg">${I("unlock")} Unlock my PC</span><span class="sugg">${I("lock")} Lock my PC</span><span class="sugg">${I("folder")} Open Downloads</span><span class="sugg">${I("battery")} Battery</span></div>
+      <div class="composer"><div class="round">${I("mic")}</div><span class="ph">Message your PC…</span><div class="round send">${I("send")}</div></div>${tabs("Chat")}`),
+
+    sheet: () => phone(`<div class="head"><div class="orb"></div><b>Unlock my PC</b></div>
+      <div class="scroll"><div class="me">unlock my PC<small>9:12 AM</small></div>
+        <div class="bot"><div class="av"></div><div class="body"><div class="who">Access <span class="chip warn">Needs your approval</span></div></div></div></div>
+      <div class="dim"></div>
+      <div class="sheet"><div class="grab"></div>
+        <h3>${I("lock")} Unlock this PC</h3>
+        <p class="lead">Your PC’s saved Windows sign-in will be typed at its lock screen. Type your unlock PIN to allow it.</p>
+        <div class="warn">${I("shield")}<span>Only you can do this. Three wrong PINs pause it for ten minutes.</span></div>
+        <div class="pin"><i class="on">•</i><i>•</i><i>•</i><i>•</i><i></i><i></i></div>
+        <div class="pinhint">Unlock PIN · 6 to 32 characters</div>
+        <div class="btns"><div class="btn ghost">Reject</div><div class="btn primary">${I("check")} Approve</div></div></div>`),
+
+    desk: () => {
+      const qr = Array.from({ length: 441 }, (_, i) => { const x = i % 21, y = Math.floor(i / 21); const finder = (x < 7 && y < 7) || (x > 13 && y < 7) || (x < 7 && y > 13);
+        const ring = finder && ((x % 14 === 0 || x % 14 === 6 || y % 14 === 0 || y % 14 === 6) || ((x % 14) > 1 && (x % 14) < 5 && (y % 14) > 1 && (y % 14) < 5));
+        const on = finder ? ring : ((x * 7 + y * 13 + (x ^ y) * 3) % 5 < 2); return `<i class="${on ? "" : "w"}"></i>`; }).join("");
+      return `<div class="win"><div class="title"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i><div class="grow">AccessFromPhone · MY-PC</div></div>
+      <div class="deskbody"><aside class="rail"><div class="brand">${I("pc")}<b>ACCESS</b></div>
+        ${[["home", "Overview", 1], ["phone", "Phones"], ["unlock", "Unlock"], ["globe", "Connection"], ["activity", "Activity", 0, 2], ["gear", "Settings"]]
+          .map(([n, l, on, badge]) => `<div class="nav ${on ? "on" : ""}">${I(n)}<span>${l}</span>${badge ? `<em>${badge}</em>` : ""}</div>`).join("")}
+        <div class="me2"><div class="av">A</div><div><b style="display:block">Afza</b><small style="color:var(--muted)">Owner · signed in</small></div></div></aside>
+        <main class="main"><div class="hello"><div class="pcicon">${I("pc")}</div><div class="grow"><h1>Good evening, Afza</h1><p>MY-PC is online · 2 phones paired · nothing needs you right now</p></div>
+          <span class="chip ok">${I("check")} All systems ready</span></div>
+          <div class="stat"><div class="tile"><small>CPU</small><b>24%</b><div class="bar"><i style="width:24%"></i></div></div><div class="tile"><small>Memory</small><b>61%</b><div class="bar"><i style="width:61%"></i></div></div>
+            <div class="tile"><small>Disk free</small><b>112 GB</b><div class="bar"><i style="width:38%"></i></div></div><div class="tile"><small>Battery</small><b>82% · charging</b><div class="bar"><i style="width:82%"></i></div></div></div>
+          <div class="cols">
+            <div class="stack">
+              <section class="card"><h2>${I("phone")} Your phones <span class="chip ok">2 online</span></h2>
+                <div class="dev">${I("phone")}<div class="grow"><b>Afza’s phone</b><small>Online · 10.13.244.31</small></div><span class="chip ok">Online</span></div>
+                <div class="dev">${I("phone")}<div class="grow"><b>Tablet</b><small>Seen 2 days ago</small></div><span class="chip">Allowed</span></div></section>
+              <section class="card"><h2>${I("activity")} Recent activity <span class="chip">Today</span></h2>
+                <div class="row">${I("check")}<div class="grow"><b>Unlocked from Afza’s phone</b><small>Approved with PIN · 9:12 AM</small></div></div>
+                <div class="row">${I("check")}<div class="grow"><b>Browsed Downloads</b><small>Read only · 9:20 AM</small></div></div></section></div>
+            <div class="stack">
+              <section class="card"><h2>${I("unlock")} Unlock from phone <span class="chip ok">On</span></h2>
+                <p class="meta">Saved sign-in: <b style="color:var(--text)">Windows Hello PIN</b>. This PC is unlocked right now.</p>
+                <div class="btns" style="margin-top:12px"><div class="btn" style="height:38px;font-size:13px">${I("power")} Switch off</div><div class="btn" style="height:38px;font-size:13px;color:var(--bad)">Remove</div></div></section>
+              <section class="card"><h2>${I("globe")} How phones reach this PC</h2>
+                <div class="dev">${I("wifi")}<div class="grow"><b>Same Wi-Fi</b><small>https://10.13.244.14:8765</small></div><span class="chip ok">Ready</span></div>
+                <div class="dev">${I("globe")}<div class="grow"><b>Anywhere</b><small>Not set up yet</small></div><span class="chip">Set up</span></div></section></div>
+            <section class="card"><h2>${I("plus")} Connect a phone</h2><div class="qr">${qr}</div><div class="code">K7M2 · 9QXP</div>
+              <p class="meta" style="text-align:center;margin-top:8px">Scan with your phone’s camera. Expires in 1:42</p></section>
+          </div></main></div></div>`;
+    },
+  };
+  const which = new URLSearchParams(location.search).get("s") || "home";
+  document.getElementById("stage").innerHTML = screens[which]();
+</script>
+</body>
+</html>

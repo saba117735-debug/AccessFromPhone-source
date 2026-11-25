@@ -1,0 +1,32 @@
+[project]
+name = "handoff"
+version = "0.2.0"
+description = "AccessFromPhone: approve-first AI agent for your PC, controlled from your phone"
+requires-python = ">=3.11"
+dependencies = [
+    "pydantic>=2.7",
+    "pydantic-settings>=2.3",
+    "pyyaml>=6.0",
+    "fastapi>=0.110",
+    "uvicorn>=0.29",
+    "qrcode>=7.4",
+    "cryptography>=42",
+    "zeroconf>=0.130",
+    "psutil>=5.9",
+    "websockets>=14",
+    "httpx>=0.27",
+    "pillow>=10.0",  # thumbnails for the gallery, and checking an edited picture before it is saved
+    "PyAudioWPatch>=0.2.12; sys_platform == 'win32'",  # the PC's sound for a phone that is looking (optional at run time: without it the Sound switch says it is not available)
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0", "httpx>=0.27"]
+build = ["pyinstaller>=6.0", "pystray>=0.19", "pillow>=10.0"]  # the tray app and the Windows installer
+webcam = ["opencv-python>=4.8"]  # the optional webcam photo (daily.webcam)
+
+[tool.setuptools.package-data]
+handoff = ["web/*", "web/vendor/*"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]

@@ -1,0 +1,15 @@
+AccessFromPhone - quick start (Windows)
+
+1. Install Python 3.11 or newer from https://www.python.org/downloads/
+   (tick "Add python.exe to PATH").
+2. Double-click START.bat.
+   The first run downloads and installs everything it needs automatically
+   (needs internet, about a minute). Later runs start immediately.
+3. A page opens on this PC. Sign in with your Windows user name and password,
+   then scan the QR code with your phone (same Wi-Fi as the PC).
+
+Optional: for AI answers, set the ANTHROPIC_API_KEY environment variable
+(or install Ollama). Without it, simple commands like list/read/find still work.
+
+Step-by-step installation and setup: INSTALL.txt
+Full documentation: README.md

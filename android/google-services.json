@@ -1,0 +1,76 @@
+{
+  "project_info": {
+    "project_number": "671746457305",
+    "project_id": "afdani-e9a1d",
+    "storage_bucket": "afdani-e9a1d.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:671746457305:android:b6a6f2a8135cd0af0348c8",
+        "android_client_info": {
+          "package_name": "app.accessfromphone"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA99y6xY_1xExIV6ojESBBrT-VkMRlL-AQ"
+        },
+        {
+          "current_key": "AIzaSyAw494xaiuUiSqyC1qii-0hfCq6B9413TU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:671746457305:android:da7b6bb3f9e7ea560348c8",
+        "android_client_info": {
+          "package_name": "com.afdani.drive"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA99y6xY_1xExIV6ojESBBrT-VkMRlL-AQ"
+        },
+        {
+          "current_key": "AIzaSyAw494xaiuUiSqyC1qii-0hfCq6B9413TU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:671746457305:android:b25f4d3bbf05ec570348c8",
+        "android_client_info": {
+          "package_name": "com.afdani.scrapflow"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA99y6xY_1xExIV6ojESBBrT-VkMRlL-AQ"
+        },
+        {
+          "current_key": "AIzaSyAw494xaiuUiSqyC1qii-0hfCq6B9413TU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
